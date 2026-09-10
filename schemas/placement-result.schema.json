@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/placement-result.schema.json",
+  "title": "English Coach Placement Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "learner_id", "blueprint_id", "completed_at", "overall_start_band", "overall_confidence", "domains", "clearances", "direct_evidence_event_ids", "untested_nodes_mastered", "ielts_diagnostic_eligible"],
+  "properties": {
+    "id": {"type": "string", "minLength": 8, "maxLength": 120},
+    "learner_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "blueprint_id": {"type": "string", "pattern": "^PLCB-[A-Z0-9-]+-\\d{2}$"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "overall_start_band": {"enum": ["A1", "A1-A2", "A2", "A2-B1", "B1", "B1-B2", "B2"]},
+    "overall_confidence": {"enum": ["low", "medium", "high"]},
+    "domains": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["domain", "observed_band", "confidence", "direct_tested_node_ids", "gap_node_ids", "anchor_evidence_count"],
+        "properties": {
+          "domain": {"enum": ["GR", "VX", "LS", "SP", "RD", "WR", "PR", "CF"]},
+          "observed_band": {"enum": ["A1", "A1-A2", "A2", "A2-B1", "B1", "B1-B2", "B2"]},
+          "confidence": {"enum": ["low", "medium", "high"]},
+          "direct_tested_node_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+          "gap_node_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+          "anchor_evidence_count": {"type": "integer", "minimum": 0},
+          "notes": {"type": ["string", "null"], "maxLength": 1000}
+        }
+      }
+    },
+    "clearances": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["domain", "through_level", "status", "confidence", "excluded_gap_node_ids"],
+        "properties": {
+          "domain": {"enum": ["GR", "VX", "LS", "SP", "RD", "WR", "PR", "CF"]},
+          "through_level": {"enum": ["A1", "A2", "B1"]},
+          "status": {"enum": ["inferred_ready", "not_granted", "revoked"]},
+          "confidence": {"enum": ["low", "medium", "high"]},
+          "excluded_gap_node_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}}
+        }
+      }
+    },
+    "direct_evidence_event_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 120}},
+    "untested_nodes_mastered": {"const": false},
+    "ielts_diagnostic_eligible": {"type": "boolean"},
+    "notes": {"type": ["string", "null"], "maxLength": 1500}
+  }
+}

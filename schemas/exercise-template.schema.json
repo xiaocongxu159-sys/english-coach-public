@@ -1,0 +1,36 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://english-coach.local/schemas/exercise-template.schema.json",
+  "title":"English Coach Exercise Template",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["id","version","status","level","task_type","target_node_ids","evidence_type","scoring_mode","generation_policy","validation_policy"],
+  "properties":{
+    "id":{"type":"string","pattern":"^ET-(A1|A2|B1|B2)-[A-Z0-9-]+-[0-9]{2}$"},
+    "version":{"type":"integer","minimum":1},
+    "status":{"enum":["draft","reviewed","active","deprecated"]},
+    "level":{"enum":["A1","A2","B1","B2"]},
+    "task_type":{"enum":["multiple_choice_single","multiple_choice_multi","true_false","fill_blank","short_answer","ordering","matching","error_correction","sentence_transformation","controlled_production","free_written","free_spoken","listening_completion","listening_choice","reading_choice","reading_completion","pronunciation_production","communication_roleplay"]},
+    "target_node_ids":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","pattern":"^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-[0-9]{2}$"}},
+    "evidence_type":{"enum":["recognition","controlled_production","free_written_production","free_spoken_production","spontaneous_reuse","listening_comprehension","reading_comprehension","pronunciation_intelligibility","communication_repair"]},
+    "scoring_mode":{"enum":["deterministic","rubric","hybrid"]},
+    "generation_policy":{
+      "type":"object","additionalProperties":false,
+      "required":["ai_variant_allowed","reviewed_core_required","allowed_change_fields","forbidden_change_fields"],
+      "properties":{
+        "ai_variant_allowed":{"type":"boolean"},
+        "reviewed_core_required":{"type":"boolean"},
+        "allowed_change_fields":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":80}},
+        "forbidden_change_fields":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":80}}
+      }
+    },
+    "validation_policy":{
+      "type":"object","additionalProperties":false,
+      "required":["schema","scope","answer","ambiguity","level","independent_qa_for_scored_variant"],
+      "properties":{
+        "schema":{"const":true},"scope":{"const":true},"answer":{"const":true},"ambiguity":{"const":true},"level":{"const":true},
+        "independent_qa_for_scored_variant":{"type":"boolean"}
+      }
+    }
+  }
+}

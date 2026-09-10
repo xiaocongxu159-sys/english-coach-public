@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/review-unit.schema.json",
+  "title": "English Coach Review Unit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "learner_id", "node_id", "review_type", "evidence_type", "status", "content_ref", "sibling_group_id", "created_at"],
+  "properties": {
+    "id": {"type": "string", "minLength": 8, "maxLength": 140},
+    "learner_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "node_id": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"},
+    "review_type": {"enum": ["lexical_retrieval", "grammar_retrieval", "listening_microtask", "speaking_retrieval", "reading_microtask", "writing_retrieval", "pronunciation_retrieval", "communication_repair"]},
+    "evidence_type": {"enum": ["recognition", "controlled_production", "free_written_production", "free_spoken_production", "spontaneous_reuse", "listening_comprehension", "reading_comprehension", "pronunciation_intelligibility", "communication_repair"]},
+    "status": {"enum": ["inactive", "active", "suspended", "retired"]},
+    "content_ref": {"type": "string", "minLength": 1, "maxLength": 240},
+    "content_version": {"type": ["integer", "null"], "minimum": 1},
+    "sibling_group_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "scenario_tag": {"type": ["string", "null"], "maxLength": 60},
+    "created_at": {"type": "string", "format": "date-time"},
+    "activated_at": {"type": ["string", "null"], "format": "date-time"},
+    "retired_at": {"type": ["string", "null"], "format": "date-time"}
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "pilot": {
+    "id": "PILOT-A1-SOCIAL-FORMULAS-01",
+    "version": 1,
+    "versionTag": "a1-social-formulas-v1",
+    "status": "active",
+    "level": "A1",
+    "title": "Essential Social Formulas: Hello, Thanks, Sorry, Goodbye",
+    "curriculumVersion": "phase0-freeze-v1",
+    "purpose": "Provide a prerequisite-free reviewed A1 content slice that a brand-new learner can genuinely start without fabricated prerequisite readiness or live AI-generated scored truth."
+  },
+  "activeNodeIds": [
+    "CF-A1-SOCIAL-GREET-01",
+    "VX-A1-SOCIAL-FORMULAS-01"
+  ],
+  "primaryNodeIds": [
+    "CF-A1-SOCIAL-GREET-01",
+    "VX-A1-SOCIAL-FORMULAS-01"
+  ],
+  "supportNodeIds": [],
+  "nodeEvidenceRequirements": {
+    "CF-A1-SOCIAL-GREET-01": [
+      "recognition",
+      "controlled_production",
+      "free_spoken_production"
+    ],
+    "VX-A1-SOCIAL-FORMULAS-01": [
+      "recognition",
+      "controlled_production"
+    ]
+  },
+  "lessonBlueprint": {
+    "id": "LESB-A1-SOCIAL-FORMULAS-01",
+    "version": 1,
+    "status": "active",
+    "level": "A1",
+    "name": "Essential Social Formulas: Hello, Thanks, Sorry, Goodbye",
+    "lesson_type": "new_learning",
+    "duration_minutes": {
+      "min": 10,
+      "target": 14,
+      "max": 18
+    },
+    "node_selection": {
+      "primary_domains": ["CF", "VX"],
+      "primary_count": {"min": 2, "max": 2},
+      "support_count_max": 0,
+      "review_count_max": 3,
+      "require_hard_prerequisites_ready": true
+    },
+    "stages": [
+      {"key":"everyday_social_context","kind":"activate_context","required":true,"minutes":{"min":1,"max":2},"target_role":"primary","evidence_types":[],"ai_content_mode":"reviewed_only"},
+      {"key":"teach_social_formulas","kind":"teach_explain","required":true,"minutes":{"min":2,"max":3},"target_role":"primary","evidence_types":[],"ai_content_mode":"reviewed_only"},
+      {"key":"model_short_interactions","kind":"model","required":true,"minutes":{"min":1,"max":2},"target_role":"primary","evidence_types":[],"ai_content_mode":"reviewed_only"},
+      {"key":"recognition_check","kind":"recognition","required":true,"minutes":{"min":2,"max":3},"target_role":"primary","evidence_types":["recognition"],"ai_content_mode":"reviewed_only"},
+      {"key":"controlled_formulas","kind":"controlled_production","required":true,"minutes":{"min":2,"max":3},"target_role":"primary","evidence_types":["controlled_production"],"ai_content_mode":"reviewed_only"},
+      {"key":"speaking_rehearsal","kind":"speaking_application","required":false,"minutes":{"min":1,"max":2},"target_role":"primary","evidence_types":["free_spoken_production"],"ai_content_mode":"reviewed_only"},
+      {"key":"exit_check","kind":"exit_check","required":true,"minutes":{"min":1,"max":2},"target_role":"primary","evidence_types":["recognition","controlled_production"],"ai_content_mode":"reviewed_only"},
+      {"key":"lesson_summary","kind":"summary_reflection","required":true,"minutes":{"min":1,"max":1},"target_role":"none","evidence_types":[],"ai_content_mode":"reviewed_only"}
+    ],
+    "personalization": {
+      "scenario_tags_allowed": ["everyday_social"],
+      "learner_interest_allowed": false,
+      "chinese_support": "on_request",
+      "difficulty_adjustment": "bounded",
+      "forbid_scope_expansion": true
+    },
+    "content_policy": {
+      "reviewed_core_required": true,
+      "ai_variants_allowed": false,
+      "scored_ai_variant_policy": "forbidden"
+    },
+    "resume_policy": {"checkpoint_after_each_stage": true, "preserve_attempts": true},
+    "notes": "Both active nodes are root nodes with no hard prerequisites. All scored content is fixed reviewed core. Free-spoken rehearsal targets the communicative-function node only and remains practice-only until a validated speech evaluator exists."
+  },
+  "lessonContent": {
+    "learningObjectives": [
+      "Choose an appropriate greeting, first-meeting response, thanks, apology, and closing in short familiar situations.",
+      "Produce the reviewed social formulas in tightly controlled written prompts.",
+      "Rehearse the social formulas aloud without treating unvalidated speech as trusted evidence."
+    ],
+    "notInScope": [
+      "Names or broader personal-information exchange",
+      "Present be or other grammar analysis",
+      "Pronunciation scoring",
+      "Open-ended AI-generated scored questions"
+    ],
+    "teachBlocks": [
+      {"key":"greeting","title":"Greet someone","english":"Hello. / Hi.","explanation":"Use Hello or Hi to open a simple social interaction.","supportZh":"开始简单社交对话时，可以说 Hello 或 Hi。"},
+      {"key":"first_meeting","title":"Respond on a first meeting","english":"Nice to meet you. — Nice to meet you, too.","explanation":"Use this exchange when meeting someone for the first time.","supportZh":"第一次见面可以说 Nice to meet you，对方可以回答 Nice to meet you, too."},
+      {"key":"thanks","title":"Thank someone","english":"Thank you. — You're welcome.","explanation":"Use Thank you after someone helps you. You're welcome is a common response.","supportZh":"别人帮助你后可以说 Thank you。对方常回答 You're welcome。"},
+      {"key":"apology","title":"Make a simple apology","english":"Sorry.","explanation":"Use Sorry for a small everyday mistake or inconvenience.","supportZh":"日常小错误或给别人带来一点不便时，可以说 Sorry。"},
+      {"key":"closing","title":"Close the interaction","english":"Goodbye. / Bye.","explanation":"Use Goodbye or Bye when you leave or end a simple conversation.","supportZh":"离开或结束简单对话时，可以说 Goodbye 或 Bye。"}
+    ],
+    "reviewedDialogue": [
+      {"speaker":"Maya","text":"Hello."},
+      {"speaker":"Leo","text":"Hi. Nice to meet you."},
+      {"speaker":"Maya","text":"Nice to meet you, too."},
+      {"speaker":"Leo","text":"Goodbye."},
+      {"speaker":"Maya","text":"Bye."}
+    ],
+    "speakingPractice": {
+      "required": false,
+      "scored": false,
+      "prompt": "Say one appropriate phrase for each cue: 1) you meet someone; 2) someone helps you; 3) you make a small mistake; 4) you leave.",
+      "reasonUnscored": "Phase 1 pilot has no validated speech evaluator yet; spoken practice must not create trusted mastery evidence."
+    },
+    "exerciseSequence": [
+      "EI-A1-SOCIAL-RECOGNITION-001",
+      "EI-A1-SOCIAL-RECOGNITION-002",
+      "EI-A1-SOCIAL-RECOGNITION-003",
+      "EI-A1-SOCIAL-RECOGNITION-004",
+      "EI-A1-SOCIAL-RECOGNITION-005",
+      "EI-A1-SOCIAL-CONTROLLED-001",
+      "EI-A1-SOCIAL-CONTROLLED-002",
+      "EI-A1-SOCIAL-CONTROLLED-003",
+      "EI-A1-SOCIAL-CONTROLLED-004",
+      "EI-A1-SOCIAL-CONTROLLED-005",
+      "EI-A1-SOCIAL-SPEAK-001"
+    ],
+    "exitGate": {
+      "scoredItemCount": 10,
+      "minimumCorrect": 8,
+      "requiredCorrectItemIds": [
+        "EI-A1-SOCIAL-CONTROLLED-001",
+        "EI-A1-SOCIAL-CONTROLLED-005"
+      ],
+      "practiceOnlyItemIds": ["EI-A1-SOCIAL-SPEAK-001"]
+    }
+  },
+  "contentReview": {
+    "contentClass": "reviewed_core",
+    "origin": "ai_assisted",
+    "externalHumanReview": false,
+    "reviewMethod": [
+      "Pass 1: root-node and prerequisite/scope review against frozen A1 graph",
+      "Pass 2: node-semantic coverage and required-evidence review",
+      "Pass 3: deterministic answer and ambiguity review",
+      "Automated manifest, reference, lifecycle, evidence-requirement, and state-effect checks"
+    ],
+    "rights": "Original project-authored content; no copied textbook, IELTS bank, podcast, or third-party audio.",
+    "reviewedOn": "2026-09-01"
+  },
+  "exerciseTemplateFiles": ["templates.json"],
+  "exerciseItemFiles": ["items-1.json", "items-2.json"]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "LESB-A1-SOCIAL-FORMULAS-02",
+  "version": 1,
+  "status": "active",
+  "level": "A1",
+  "name": "Essential Social Formulas Review",
+  "lesson_type": "review",
+  "duration_minutes": {"min": 5, "target": 5, "max": 8},
+  "node_selection": {
+    "primary_count": {"min": 0, "max": 0},
+    "support_count_max": 0,
+    "review_count_max": 1,
+    "require_hard_prerequisites_ready": true
+  },
+  "stages": [
+    {
+      "key": "review_retrieval",
+      "kind": "review_retrieval",
+      "required": true,
+      "minutes": {"min": 1, "max": 5},
+      "target_role": "review",
+      "evidence_types": ["controlled_production"],
+      "ai_content_mode": "reviewed_only"
+    }
+  ],
+  "personalization": {
+    "scenario_tags_allowed": ["everyday_social"],
+    "learner_interest_allowed": false,
+    "chinese_support": "on_request",
+    "difficulty_adjustment": "fixed",
+    "forbid_scope_expansion": true
+  },
+  "content_policy": {
+    "reviewed_core_required": true,
+    "ai_variants_allowed": false,
+    "scored_ai_variant_policy": "forbidden"
+  },
+  "resume_policy": {
+    "checkpoint_after_each_stage": true,
+    "preserve_attempts": true
+  },
+  "notes": "Phase 1 review-session slice. Resolves one learner-owned due Review Unit at a time and only reuses an active deterministic reviewed-core item whose sole target node and evidence type exactly match that Review Unit. Multi-target items, live AI scoring, and spoken scoring are intentionally excluded."
+}

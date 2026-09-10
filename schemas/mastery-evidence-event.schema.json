@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/mastery-evidence-event.schema.json",
+  "title": "English Coach Mastery Evidence Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "learner_id", "node_id", "occurred_at", "event_kind", "evidence_type", "rating", "assistance", "evaluator", "evaluator_confidence", "is_scored", "source", "context"],
+  "properties": {
+    "id": {"type": "string", "minLength": 8, "maxLength": 120},
+    "learner_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "node_id": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "event_kind": {"enum": ["exposure", "practice", "assessment", "review"]},
+    "evidence_type": {"enum": ["recognition", "controlled_production", "free_written_production", "free_spoken_production", "spontaneous_reuse", "listening_comprehension", "reading_comprehension", "pronunciation_intelligibility", "communication_repair"]},
+    "rating": {"type": "integer", "minimum": 0, "maximum": 4},
+    "assistance": {"enum": ["independent", "minor_prompt", "major_prompt", "model_then_repeat"]},
+    "evaluator": {"enum": ["deterministic", "rubric_ai", "human"]},
+    "evaluator_confidence": {"enum": ["high", "medium", "low"]},
+    "is_scored": {"type": "boolean"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["lesson_instance_id", "stage_id", "attempt_group_id", "content_kind"],
+      "properties": {
+        "lesson_instance_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "stage_id": {"type": "string", "minLength": 1, "maxLength": 80},
+        "attempt_group_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "content_ref": {"type": ["string", "null"], "maxLength": 200},
+        "content_kind": {"enum": ["reviewed_core", "validated_variant", "interactive_rubric", "unscored_practice"]}
+      }
+    },
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["prompt_explicitness", "days_since_previous_scored_success"],
+      "properties": {
+        "scenario_tag": {"type": ["string", "null"], "maxLength": 60},
+        "prompt_explicitness": {"enum": ["target_explicit", "target_hint", "natural_context"]},
+        "days_since_previous_scored_success": {"type": ["integer", "null"], "minimum": 0},
+        "response_language_mode": {"enum": ["english", "mixed", "other"]}
+      }
+    },
+    "error_categories": {"type": "array", "uniqueItems": true, "items": {"type": "string", "maxLength": 80}},
+    "notes": {"type": ["string", "null"], "maxLength": 1000}
+  }
+}

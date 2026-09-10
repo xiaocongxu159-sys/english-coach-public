@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "scheduler": {
+    "adapter": "fsrs",
+    "algorithm_version": "FSRS-6",
+    "implementation_candidate": "ts-fsrs",
+    "request_retention": 0.9,
+    "enable_fuzz": true,
+    "short_term_retry_owner": "lesson_engine",
+    "parameters_version": "review-v1-default"
+  },
+  "grade_mapping": {
+    "independent": {
+      "0": "Again",
+      "1": "Again",
+      "2": "Hard",
+      "3": "Good",
+      "4": "Easy"
+    },
+    "minor_prompt": {
+      "0": "Again",
+      "1": "Again",
+      "2": "Hard",
+      "3": "Hard",
+      "4": "Hard"
+    },
+    "major_prompt": {
+      "0": "Again",
+      "1": "Again",
+      "2": "Again",
+      "3": "Again",
+      "4": "Again"
+    },
+    "model_then_repeat": {
+      "0": "Again",
+      "1": "Again",
+      "2": "Again",
+      "3": "Again",
+      "4": "Again"
+    }
+  },
+  "fsrs_update_gate": {
+    "requires_is_scored": true,
+    "allowed_evaluator_confidence": ["high", "medium"],
+    "allowed_content_kinds": ["reviewed_core", "validated_variant", "interactive_rubric"]
+  },
+  "review_unit_activation": {
+    "allowed_mastery_states": ["introduced", "developing", "functional", "secure", "lapsed"],
+    "requires_reviewable_content_ref": true,
+    "do_not_activate_unseen_nodes": true
+  },
+  "status_rules": {
+    "overdue_after_hours": 24,
+    "lapsed_mastery_status": "relearning"
+  },
+  "same_session": {
+    "correction_retry_uses_fsrs": false,
+    "failed_review_can_be_retried_in_same_lesson": true,
+    "same_attempt_retries_do_not_create_multiple_fsrs_updates": true
+  },
+  "sibling_policy": {
+    "avoid_same_sibling_group_back_to_back": true,
+    "same_content_ref_once_per_day_by_default": true
+  },
+  "notes": [
+    "request_retention 0.90 is a configurable starting baseline, not claimed to be optimal for English learning.",
+    "FSRS controls retrieval scheduling only; it does not define Knowledge Node mastery or IELTS/CEFR level.",
+    "Exact ts-fsrs library version is pinned at implementation time and stored separately from the FSRS algorithm version.",
+    "Global daily review budget and due-item priority competition are defined in the later daily scheduler task."
+  ]
+}

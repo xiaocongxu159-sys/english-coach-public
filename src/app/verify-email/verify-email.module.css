@@ -1,0 +1,130 @@
+.shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+}
+
+.card {
+  width: min(100%, 460px);
+  padding: 34px;
+  border: 1px solid #e3e7ef;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 70px rgba(23, 32, 51, 0.1);
+}
+
+.brand {
+  margin: 0 0 18px;
+  color: #4d5ed4;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.successIcon,
+.errorIcon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 18px;
+  border-radius: 999px;
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.successIcon {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.errorIcon {
+  background: #fff0ef;
+  color: #a23832;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 2.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+
+.copy {
+  margin: 14px 0 22px;
+  color: #667085;
+  line-height: 1.6;
+}
+
+.notice,
+.errorNotice {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.notice {
+  background: #eef3ff;
+  color: #344da0;
+}
+
+.errorNotice {
+  background: #fff0ef;
+  color: #a23832;
+}
+
+.primaryLink,
+.secondaryLink {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.primaryLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #4964e8;
+  background: #4964e8;
+  color: #fff;
+}
+
+.primaryLink:hover {
+  background: #4058cf;
+}
+
+.secondaryLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  border: 1px solid #cfd6e3;
+  background: #fff;
+  color: #344054;
+}
+
+.secondaryLink:hover {
+  background: #f4f6fa;
+}
+
+@media (max-width: 520px) {
+  .shell {
+    place-items: start center;
+    padding: 18px 12px 28px;
+  }
+
+  .card {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .title {
+    font-size: 2.25rem;
+  }
+}

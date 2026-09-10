@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/lesson-instance.schema.json",
+  "title": "English Coach Lesson Instance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "blueprint_id", "learner_id", "created_at", "level", "lesson_type", "primary_nodes", "support_nodes", "review_nodes", "resolved_stages", "runtime_context", "completion"],
+  "properties": {
+    "id": {"type": "string", "minLength": 8, "maxLength": 100},
+    "blueprint_id": {"type": "string", "pattern": "^LESB-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"},
+    "learner_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "created_at": {"type": "string", "format": "date-time"},
+    "scheduled_for": {"type": ["string", "null"], "format": "date"},
+    "level": {"enum": ["A1", "A2", "B1", "B2"]},
+    "lesson_type": {"enum": ["new_learning", "mixed_learning", "review", "speaking_focus", "listening_focus", "reading_focus", "writing_focus", "pronunciation_focus", "assessment_checkpoint", "ielts_practice"]},
+    "primary_nodes": {"type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+    "support_nodes": {"type": "array", "maxItems": 10, "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+    "review_nodes": {"type": "array", "maxItems": 20, "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+    "resolved_stages": {
+      "type": "array", "minItems": 1, "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["stage_id", "kind", "status", "target_nodes", "content_refs", "evidence_plan"],
+        "properties": {
+          "stage_id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{1,39}$"},
+          "kind": {"enum": ["review_retrieval", "activate_context", "teach_explain", "model", "recognition", "controlled_production", "listening_application", "reading_application", "speaking_application", "writing_application", "pronunciation_application", "correction_retry", "exit_check", "summary_reflection"]},
+          "status": {"enum": ["pending", "in_progress", "completed", "skipped"]},
+          "target_nodes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+          "content_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 200}},
+          "evidence_plan": {"type": "array", "uniqueItems": true, "items": {"enum": ["recognition", "controlled_production", "free_written_production", "free_spoken_production", "spontaneous_reuse", "listening_comprehension", "reading_comprehension", "pronunciation_intelligibility", "communication_repair"]}}
+        }
+      }
+    },
+    "runtime_context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["recent_error_categories", "scenario_tags", "language_support_mode", "difficulty_band"],
+      "properties": {
+        "recent_error_categories": {"type": "array", "uniqueItems": true, "items": {"type": "string", "maxLength": 80}},
+        "scenario_tags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "maxLength": 60}},
+        "language_support_mode": {"enum": ["english_first", "adaptive_bilingual", "english_only"]},
+        "difficulty_band": {"enum": ["supported", "on_level", "stretch"]},
+        "learner_interest_tags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "maxLength": 60}}
+      }
+    },
+    "completion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "completed_stage_ids", "evidence_event_ids"],
+      "properties": {
+        "status": {"enum": ["not_started", "in_progress", "completed", "abandoned"]},
+        "completed_stage_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "evidence_event_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "summary_ref": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

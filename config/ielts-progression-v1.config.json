@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "notes": "All gate percentages/counts are configurable English Coach V1 product defaults, not official IELTS or CEFR cut scores.",
+  "stages": {
+    "general_foundation": {
+      "ielts_daily_share_max": 0.0,
+      "purpose": "build general English without exam-task pressure"
+    },
+    "format_familiarization": {
+      "ielts_daily_share_max": 0.10,
+      "entry": {
+        "recommended_general_boundary": "B1",
+        "placement_or_mastery_confidence_min": "medium"
+      },
+      "purpose": "learn test structure and task instructions without score chasing"
+    },
+    "guided_mini_tasks": {
+      "ielts_daily_share_max": 0.20,
+      "entry": {
+        "b1_relevant_node_functional_or_secure_ratio_min": 0.50,
+        "critical_lapsed_nodes_allowed": 0
+      },
+      "purpose": "practice short IELTS-style operations with teaching support"
+    },
+    "timed_component_practice": {
+      "ielts_daily_share_max": 0.35,
+      "entry": {
+        "b1_relevant_node_functional_or_secure_ratio_min": 0.75,
+        "b2_relevant_node_functional_or_secure_ratio_min": 0.25,
+        "validated_mini_checkpoints_per_component_min": 2,
+        "critical_lapsed_nodes_allowed": 0
+      },
+      "purpose": "practice component sections under increasing timing/scaffolding constraints"
+    },
+    "full_mock_diagnostics": {
+      "ielts_daily_share_max": 0.50,
+      "entry": {
+        "b2_relevant_node_functional_or_secure_ratio_min": 0.50,
+        "timed_component_checkpoints_per_component_min": 1,
+        "one_pass_listening_experience_required": true,
+        "full_speaking_simulation_experience_required": true,
+        "timed_writing_experience_required": true
+      },
+      "purpose": "run full or near-full diagnostics to locate score-limiting components"
+    },
+    "target_readiness": {
+      "ielts_daily_share_max": 0.65,
+      "entry": {
+        "recent_evidence_window_days": 42,
+        "four_skill_mock_sets_min": 3,
+        "distinct_test_forms_min": 2,
+        "component_estimate_confidence_min": "medium",
+        "median_estimated_overall_at_or_above_target": true,
+        "median_each_component_at_or_above_user_minimum": true,
+        "recent_unresolved_critical_gap_allowed": false,
+        "official_or_approved_external_checkpoint_recommended": true
+      },
+      "purpose": "maintain target performance and close remaining component gaps before booking/sitting the exam"
+    }
+  },
+  "score_policy": {
+    "internal_estimates_must_be_labeled_estimated": true,
+    "cefr_direct_band_conversion_forbidden": true,
+    "uncalibrated_internal_raw_score_to_band_forbidden": true,
+    "listening_reading_official_raw_conversion_may_be_used_only_for_matching_official_or_calibrated_forms": true,
+    "speaking_criteria": ["fluency_and_coherence","lexical_resource","grammatical_range_and_accuracy","pronunciation"],
+    "speaking_criteria_equal_weight": true,
+    "writing_criteria": ["task_achievement_or_response","coherence_and_cohesion","lexical_resource","grammatical_range_and_accuracy"],
+    "writing_criteria_equal_weight_within_task": true,
+    "writing_task2_weight_relative_to_task1": 2,
+    "overall_component_average_rounding": "official_nearest_half_band_rule"
+  },
+  "exam_variant_policy": {
+    "listening_shared": true,
+    "speaking_shared": true,
+    "reading_variant_specific": true,
+    "writing_task1_variant_specific": true,
+    "writing_task2_shared_construct_with_variant_context": true,
+    "undecided_user_can_train_shared_components": true
+  },
+  "scheduler_policy": {
+    "ielts_never_replaces_all_general_english": true,
+    "real_communication_application_remains_required": true,
+    "increase_ielts_share_as_exam_date_or_readiness_stage_advances": true
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "english-coach",
+  "version": "0.1.0",
+  "private": true,
+  "engines": { "node": ">=24.0.0 <25" },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.mjs\" \"test/**/*.test.mts\"",
+    "test:db": "node test/database-rls.integration.mjs",
+    "test:pilot-db": "node test/pilot-content-db.integration.mjs",
+    "test:engine-db": "node test/engine-db.integration.mts && node test/engine-convergence-db.integration.mts && node test/review-db.integration.mts && node test/review-rpc-hardening-db.integration.mts && node test/daily-plan-db.integration.mts && node test/lesson-resume-db.integration.mts && node test/today-service-db.integration.mts && node test/lesson-ui-service-db.integration.mts && node test/lesson-exercise-ui-db.integration.mts && node test/lesson-exercise-view-db.integration.mts && node test/lesson-speaking-ui-db.integration.mts && node test/lesson-exit-ui-db.integration.mts && node test/review-queue-db.integration.mts && node test/review-session-db.integration.mts",
+    "validate:phase0": "node scripts/validate-phase0.mjs",
+    "curriculum:build": "node scripts/build-curriculum-registry.mjs",
+    "curriculum:check": "node scripts/build-curriculum-registry.mjs --check && node scripts/validate-curriculum-registry.mjs",
+    "pilot:check": "node scripts/validate-pilot-content.mjs && node scripts/validate-review-blueprint.mjs",
+    "pilot:seed": "node scripts/seed-pilot-content.mjs",
+    "check": "npm run validate:phase0 && npm run curriculum:check && npm run pilot:check && npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.5",
+    "@supabase/supabase-js": "2.112.4",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "ts-fsrs": "5.4.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.11",
+    "@types/node": "^24.3.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "supabase": "2.116.0",
+    "typescript": "5.9.3"
+  }
+}

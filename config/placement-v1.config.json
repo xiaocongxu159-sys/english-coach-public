@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "target_duration_minutes": 45,
+  "maximum_duration_minutes": 60,
+  "routing": {
+    "starting_probe_level": "A2",
+    "strong_support_threshold": 0.75,
+    "weak_support_threshold": 0.5,
+    "ambiguous_range": [0.5, 0.75],
+    "maximum_extra_anchor_evidence_per_domain": 6,
+    "notes": [
+      "These thresholds are explainable V1 routing heuristics, not official CEFR cut scores or psychometrically calibrated constants.",
+      "Real learner data must be used to calibrate routing thresholds and anchor difficulty."
+    ]
+  },
+  "minimum_direct_evidence": {
+    "GR": 8,
+    "VX": 8,
+    "LS": 4,
+    "SP": 3,
+    "RD": 4,
+    "WR": 2,
+    "PR": 3,
+    "CF": 3
+  },
+  "confidence": {
+    "high_requires": ["boundary_confirmed", "minimum_direct_evidence_met", "no_material_contradiction"],
+    "medium_requires": ["minimum_direct_evidence_met"],
+    "low_when": ["time_limit_reached", "contradictory_evidence", "insufficient_productive_evidence"]
+  },
+  "clearance": {
+    "enabled": true,
+    "minimum_confidence": "medium",
+    "does_not_set_mastery_state": true,
+    "direct_gap_nodes_excluded": true,
+    "revoked_on_credible_direct_failure": true,
+    "scheduler_can_use_for_hard_prerequisite_bypass": true
+  },
+  "mastery_initialization": {
+    "direct_test_events_are_stored": true,
+    "untested_nodes_receive_mastery_events": false,
+    "untested_nodes_are_never_marked_mastered": true,
+    "one_placement_session_cannot_make_a_new_node_functional_by_itself": true
+  },
+  "ielts": {
+    "placement_test_returns_official_band": false,
+    "diagnostic_eligible_from": "B1",
+    "readiness_estimation_deferred_to_ielts_gates": true
+  }
+}

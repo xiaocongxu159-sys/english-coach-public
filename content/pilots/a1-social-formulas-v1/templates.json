@@ -1,0 +1,11 @@
+[
+  {
+    "id":"ET-A1-SOCIAL-RECOGNITION-01","version":1,"status":"active","level":"A1","task_type":"multiple_choice_single","target_node_ids":["CF-A1-SOCIAL-GREET-01","VX-A1-SOCIAL-FORMULAS-01"],"evidence_type":"recognition","scoring_mode":"deterministic","generation_policy":{"ai_variant_allowed":false,"reviewed_core_required":true,"allowed_change_fields":[],"forbidden_change_fields":["target_node_ids","evidence_type","task_type","answer_spec"]},"validation_policy":{"schema":true,"scope":true,"answer":true,"ambiguity":true,"level":true,"independent_qa_for_scored_variant":false}
+  },
+  {
+    "id":"ET-A1-SOCIAL-CONTROLLED-01","version":1,"status":"active","level":"A1","task_type":"short_answer","target_node_ids":["CF-A1-SOCIAL-GREET-01","VX-A1-SOCIAL-FORMULAS-01"],"evidence_type":"controlled_production","scoring_mode":"deterministic","generation_policy":{"ai_variant_allowed":false,"reviewed_core_required":true,"allowed_change_fields":[],"forbidden_change_fields":["target_node_ids","evidence_type","task_type","answer_spec"]},"validation_policy":{"schema":true,"scope":true,"answer":true,"ambiguity":true,"level":true,"independent_qa_for_scored_variant":false}
+  },
+  {
+    "id":"ET-A1-SOCIAL-SPEAK-01","version":1,"status":"active","level":"A1","task_type":"free_spoken","target_node_ids":["CF-A1-SOCIAL-GREET-01"],"evidence_type":"free_spoken_production","scoring_mode":"rubric","generation_policy":{"ai_variant_allowed":false,"reviewed_core_required":true,"allowed_change_fields":[],"forbidden_change_fields":["target_node_ids","evidence_type","task_type","answer_spec"]},"validation_policy":{"schema":true,"scope":true,"answer":true,"ambiguity":true,"level":true,"independent_qa_for_scored_variant":false}
+  }
+]

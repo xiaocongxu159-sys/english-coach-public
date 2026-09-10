@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "notes": "All numeric ranges are configurable English Coach V1 product baselines, not official CEFR cutoffs. Naturalness and comprehension quality take priority over mechanically hitting WPM.",
+  "levels": {
+    "A1": {
+      "duration_seconds": {"min": 15, "max": 60},
+      "approx_wpm": {"min": 85, "max": 115},
+      "speaker_count_max": 2,
+      "connected_speech_allowed": ["very_controlled", "controlled"],
+      "unknown_lexical_ratio_max": 0.02,
+      "paraphrase_load_max": "light",
+      "inference_load_max": "none",
+      "information_density": "low",
+      "redundancy": "high",
+      "default_accents": ["north_american", "british", "international_clear"],
+      "background_noise_max": "none",
+      "guided_max_plays": 3,
+      "scored_max_plays": 2,
+      "default_operations": ["explicit_detail", "gist_main_idea", "number_name_date", "sequence"]
+    },
+    "A2": {
+      "duration_seconds": {"min": 30, "max": 100},
+      "approx_wpm": {"min": 100, "max": 130},
+      "speaker_count_max": 3,
+      "connected_speech_allowed": ["controlled", "natural_clear"],
+      "unknown_lexical_ratio_max": 0.03,
+      "paraphrase_load_max": "light",
+      "inference_load_max": "light",
+      "information_density": "low_to_moderate",
+      "redundancy": "moderate_to_high",
+      "default_accents": ["north_american", "british", "international_clear"],
+      "background_noise_max": "very_light_guided_only",
+      "guided_max_plays": 3,
+      "scored_max_plays": 2,
+      "default_operations": ["explicit_detail", "gist_main_idea", "sequence", "number_name_date", "directions_location", "paraphrase"]
+    },
+    "B1": {
+      "duration_seconds": {"min": 60, "max": 180},
+      "approx_wpm": {"min": 120, "max": 150},
+      "speaker_count_max": 3,
+      "connected_speech_allowed": ["controlled", "natural_clear", "natural"],
+      "unknown_lexical_ratio_max": 0.05,
+      "paraphrase_load_max": "moderate",
+      "inference_load_max": "light",
+      "information_density": "moderate",
+      "redundancy": "moderate",
+      "default_accents": ["north_american", "british", "australian", "international_clear"],
+      "background_noise_max": "very_light_for_real_world_guided",
+      "guided_max_plays": 2,
+      "scored_max_plays": 2,
+      "one_pass_checkpoint_frequency": "occasional",
+      "default_operations": ["explicit_detail", "gist_main_idea", "sequence", "paraphrase", "reference_tracking", "speaker_attitude", "speaker_position", "note_taking", "lexical_in_context"]
+    },
+    "B2": {
+      "duration_seconds": {"min": 90, "max": 300},
+      "approx_wpm": {"min": 135, "max": 170},
+      "speaker_count_max": 4,
+      "connected_speech_allowed": ["natural_clear", "natural"],
+      "unknown_lexical_ratio_max": 0.07,
+      "paraphrase_load_max": "high",
+      "inference_load_max": "moderate",
+      "information_density": "moderate_to_high",
+      "redundancy": "low_to_moderate",
+      "default_accents": ["north_american", "british", "australian", "new_zealand", "international_clear"],
+      "background_noise_max": "light_realistic_for_unscored_real_world_only",
+      "guided_max_plays": 2,
+      "scored_max_plays": 1,
+      "one_pass_checkpoint_frequency": "regular",
+      "default_operations": ["explicit_detail", "gist_main_idea", "paraphrase", "reference_tracking", "speaker_attitude", "inference", "speaker_position", "agreement_disagreement", "note_taking", "data_trend", "lexical_in_context"]
+    }
+  },
+  "mode_policies": {
+    "guided_learning": {
+      "transcript_unlock": "after_first_attempt_or_later",
+      "segment_replay_allowed": true,
+      "speed_control_allowed": true,
+      "state_changing_evidence_default": false
+    },
+    "scored_practice": {
+      "transcript_unlock": "after_scored_attempt",
+      "segment_replay_allowed": false,
+      "speed_control_allowed": false,
+      "state_changing_evidence_default": true
+    },
+    "review": {
+      "transcript_unlock": "after_scored_attempt",
+      "segment_replay_allowed": false,
+      "speed_control_allowed": false,
+      "state_changing_evidence_default": true
+    },
+    "placement": {
+      "transcript_unlock": "after_completion",
+      "segment_replay_allowed": false,
+      "speed_control_allowed": false,
+      "state_changing_evidence_default": false
+    },
+    "ielts_style": {
+      "initial_max_plays": 1,
+      "transcript_unlock": "after_completion",
+      "segment_replay_allowed": false,
+      "speed_control_allowed": false,
+      "background_noise": "none",
+      "state_changing_evidence_default": "ielts_readiness_only"
+    }
+  },
+  "accent_progression": {
+    "principle": "Do not penalize non-native accent identity. Build receptive flexibility gradually and use only reviewed, intelligible audio.",
+    "A1": "one clear familiar accent per asset; rotate across sessions",
+    "A2": "introduce a second familiar accent across the week",
+    "B1": "regular exposure to North American/British and selected Australian/international-clear speech",
+    "B2": "systematic variation including North American, British, Australian and New Zealand for IELTS readiness"
+  },
+  "qa_activation_gate": {
+    "script_reviewed": true,
+    "audio_reviewed": true,
+    "level_reviewed": true,
+    "answerability_reviewed": true,
+    "audio_intelligibility_reviewed": true,
+    "ambiguity_reviewed": true
+  }
+}

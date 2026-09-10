@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "rating_scale": {
+    "0": "No usable performance / cannot perform the target.",
+    "1": "Major failure; meaning or target not achieved even with substantial support.",
+    "2": "Partial performance; important errors or support still needed.",
+    "3": "Adequate performance for the node level with independence or only a minor prompt.",
+    "4": "Strong performance for the node level; accurate, clear or fluent as appropriate."
+  },
+  "state_affecting": {
+    "allowed_evaluator_confidence": ["high", "medium"],
+    "allowed_content_kinds": ["reviewed_core", "validated_variant", "interactive_rubric"],
+    "allowed_assistance_for_failure": ["independent", "minor_prompt"]
+  },
+  "promotion_eligible": {
+    "minimum_rating": 3,
+    "allowed_assistance": ["independent", "minor_prompt"],
+    "allowed_evaluator_confidence": ["high", "medium"],
+    "allowed_content_kinds": ["reviewed_core", "validated_variant", "interactive_rubric"],
+    "requires_is_scored": true
+  },
+  "functional_gate": {
+    "minimum_scored_events": 3,
+    "minimum_promotion_eligible_successes": 2,
+    "minimum_independent_successes": 1,
+    "minimum_distinct_sessions": 2,
+    "required_evidence_types_each_need_success": true,
+    "latest_required_rating_floor": 2
+  },
+  "secure_gate": {
+    "minimum_scored_events": 6,
+    "minimum_promotion_eligible_successes": 4,
+    "minimum_independent_successes": 3,
+    "minimum_distinct_sessions": 3,
+    "minimum_distinct_days": 3,
+    "minimum_delayed_success_days": 7,
+    "minimum_context_diversity_if_contextual": 2,
+    "required_evidence_types_each_need_success": true,
+    "spontaneous_success_required_if_node_requires": true
+  },
+  "lapse_rule": {
+    "consecutive_core_failures": 2,
+    "failure_rating_max": 1,
+    "failure_must_be_scored": true,
+    "failure_evaluator_confidence_allowed": ["high", "medium"],
+    "demote_to": "lapsed"
+  },
+  "state_order": ["unseen", "introduced", "developing", "functional", "secure"],
+  "hard_prerequisite_ready_states": ["functional", "secure"],
+  "lapsed_is_prerequisite_ready": false,
+  "notes": [
+    "Thresholds are conservative V1 product defaults, not psychometrically validated constants.",
+    "All thresholds must remain configurable and be calibrated from real learner data.",
+    "Review due or overdue does not automatically demote mastery; credible failed evidence can.",
+    "Low-confidence evaluation cannot promote or demote learner-node state."
+  ]
+}

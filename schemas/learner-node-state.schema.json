@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/learner-node-state.schema.json",
+  "title": "English Coach Learner Node State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["learner_id", "node_id", "state", "highest_state_achieved", "required_evidence_types", "summary", "prerequisite_ready", "review_status", "updated_at"],
+  "properties": {
+    "learner_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "node_id": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"},
+    "state": {"enum": ["unseen", "introduced", "developing", "functional", "secure", "lapsed"]},
+    "highest_state_achieved": {"enum": ["unseen", "introduced", "developing", "functional", "secure"]},
+    "required_evidence_types": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["recognition", "controlled_production", "free_written_production", "free_spoken_production", "spontaneous_reuse", "listening_comprehension", "reading_comprehension", "pronunciation_intelligibility", "communication_repair"]}},
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scored_events", "promotion_eligible_successes", "independent_successes", "distinct_sessions", "distinct_days", "max_delayed_success_days", "context_diversity", "consecutive_core_failures"],
+      "properties": {
+        "scored_events": {"type": "integer", "minimum": 0},
+        "promotion_eligible_successes": {"type": "integer", "minimum": 0},
+        "independent_successes": {"type": "integer", "minimum": 0},
+        "distinct_sessions": {"type": "integer", "minimum": 0},
+        "distinct_days": {"type": "integer", "minimum": 0},
+        "max_delayed_success_days": {"type": "integer", "minimum": 0},
+        "context_diversity": {"type": "integer", "minimum": 0},
+        "consecutive_core_failures": {"type": "integer", "minimum": 0},
+        "last_scored_at": {"type": ["string", "null"], "format": "date-time"},
+        "last_success_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "dimension_summaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "recognition": {"$ref": "#/$defs/dimension"},
+        "controlled_production": {"$ref": "#/$defs/dimension"},
+        "free_written_production": {"$ref": "#/$defs/dimension"},
+        "free_spoken_production": {"$ref": "#/$defs/dimension"},
+        "spontaneous_reuse": {"$ref": "#/$defs/dimension"},
+        "listening_comprehension": {"$ref": "#/$defs/dimension"},
+        "reading_comprehension": {"$ref": "#/$defs/dimension"},
+        "pronunciation_intelligibility": {"$ref": "#/$defs/dimension"},
+        "communication_repair": {"$ref": "#/$defs/dimension"}
+      }
+    },
+    "prerequisite_ready": {"type": "boolean"},
+    "review_status": {"enum": ["not_scheduled", "not_due", "due", "overdue", "relearning"]},
+    "updated_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "dimension": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scored_events", "eligible_successes", "independent_successes"],
+      "properties": {
+        "scored_events": {"type": "integer", "minimum": 0},
+        "eligible_successes": {"type": "integer", "minimum": 0},
+        "independent_successes": {"type": "integer", "minimum": 0},
+        "latest_rating": {"type": ["integer", "null"], "minimum": 0, "maximum": 4},
+        "last_event_at": {"type": ["string", "null"], "format": "date-time"},
+        "last_success_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    }
+  }
+}

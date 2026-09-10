@@ -1,0 +1,381 @@
+.shell {
+  width: min(100% - 32px, 860px);
+  margin: 0 auto;
+  padding: max(28px, env(safe-area-inset-top)) 0 max(48px, env(safe-area-inset-bottom));
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.quietLink {
+  color: #4f5f74;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.progressText {
+  color: #758091;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eaf0;
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #5268df;
+}
+
+.intro {
+  padding: 28px 0 20px;
+}
+
+.title {
+  max-width: 760px;
+  font-size: clamp(2rem, 7vw, 4rem);
+  line-height: 1;
+}
+
+.stageName {
+  margin: 14px 0 0;
+  color: #5d6878;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.panel,
+.feedback {
+  border: 1px solid #e1e5ec;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 50px rgba(23, 32, 51, 0.07);
+}
+
+.panel {
+  padding: clamp(22px, 5vw, 34px);
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 4vw, 2.1rem);
+  letter-spacing: -0.025em;
+}
+
+.feedback {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+}
+
+.feedback strong {
+  display: block;
+  font-size: 1.02rem;
+}
+
+.feedback p {
+  margin: 6px 0 0;
+  color: #536071;
+  line-height: 1.5;
+}
+
+.feedbackCorrect {
+  border-color: #cfe7d7;
+  background: #f0faf3;
+}
+
+.feedbackCorrect strong {
+  color: #28603a;
+}
+
+.feedbackIncorrect {
+  border-color: #eadfc8;
+  background: #fffbf4;
+}
+
+.feedbackIncorrect strong {
+  color: #855a19;
+}
+
+.objectiveList {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding-left: 22px;
+  color: #4f5c6d;
+  line-height: 1.6;
+}
+
+.teachList {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.teachBlock {
+  padding: 18px;
+  border-radius: 18px;
+  background: #f7f8fb;
+}
+
+.teachBlock h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.teachBlock p {
+  margin: 8px 0 0;
+  color: #5d6878;
+  line-height: 1.55;
+}
+
+.teachBlock .teachEnglish {
+  color: #172033;
+  font-size: 1.08rem;
+  font-weight: 750;
+}
+
+.teachBlock details {
+  margin-top: 12px;
+  color: #4e5dc6;
+}
+
+.teachBlock summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.dialogueList {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.dialogueLine {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f7f8fb;
+}
+
+.dialogueLine strong {
+  color: #4e5dc6;
+}
+
+.exerciseTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.exerciseTopline :global(.eyebrow) {
+  margin-bottom: 0;
+}
+
+.exerciseTopline span {
+  color: #758091;
+  font-size: 0.86rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.exerciseForm {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.optionFieldset {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.optionCard {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 54px;
+  padding: 14px 16px;
+  border: 1px solid #dfe3eb;
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+.optionCard:hover {
+  border-color: #aeb8ec;
+  background: #f8f9ff;
+}
+
+.optionCard:has(input:checked) {
+  border-color: #6478df;
+  background: #f1f3ff;
+}
+
+.optionCard input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #4964e8;
+}
+
+.textAnswer {
+  display: grid;
+  gap: 8px;
+}
+
+.textAnswer label {
+  color: #536071;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.textAnswer input {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 1px solid #ccd3df;
+  border-radius: 14px;
+  background: #fff;
+  color: #172033;
+}
+
+.textAnswer input:focus {
+  border-color: #6579df;
+}
+
+.practicePrompt {
+  margin: 18px 0 0;
+  color: #303b4d;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.practiceNote {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f7f8fb;
+  color: #667085;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.practiceActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.actionBar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding: 16px 0 max(8px, env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, rgba(246, 247, 249, 0), #f6f7f9 26%);
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  min-width: 140px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 13px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.primaryButton {
+  border: 0;
+  background: #4964e8;
+  color: #fff;
+}
+
+.primaryButton:hover {
+  background: #3f57cf;
+}
+
+.secondaryButton {
+  border: 1px solid #ccd3df;
+  background: #fff;
+  color: #465266;
+}
+
+.secondaryButton:hover {
+  border-color: #aeb6c4;
+  background: #f8f9fb;
+}
+
+@media (max-width: 520px) {
+  .shell {
+    width: min(100% - 20px, 860px);
+    padding-top: max(18px, env(safe-area-inset-top));
+  }
+
+  .panel,
+  .feedback {
+    border-radius: 22px;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .dialogueLine {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .optionCard {
+    min-height: 58px;
+    padding: 14px;
+  }
+
+  .practiceActions,
+  .practiceActions form,
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}

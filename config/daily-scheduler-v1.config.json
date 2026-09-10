@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "time_presets_minutes": [20, 35, 50],
+  "default_time_budget_minutes": 35,
+  "review_debt_bands": {
+    "low_max_due_minutes_ratio": 0.15,
+    "normal_max_due_minutes_ratio": 0.35,
+    "high_max_due_minutes_ratio": 0.6,
+    "severe_above_due_minutes_ratio": 0.6
+  },
+  "allocation_percent": {
+    "low": {"review": 15, "remediation": 5, "new_learning": 35, "application": 40, "wrap_up": 5},
+    "normal": {"review": 25, "remediation": 10, "new_learning": 30, "application": 30, "wrap_up": 5},
+    "high": {"review": 40, "remediation": 20, "new_learning": 15, "application": 20, "wrap_up": 5},
+    "severe": {"review": 45, "remediation": 30, "new_learning": 0, "application": 20, "wrap_up": 5}
+  },
+  "new_primary_node_limits": {
+    "20": 1,
+    "35": 2,
+    "50": 3,
+    "severe_debt": 0,
+    "high_debt_max": 1
+  },
+  "priority_tiers": [
+    "P0_lapsed_relearning",
+    "P1_overdue_review",
+    "P2_due_review",
+    "P3_known_gap_or_repeated_error",
+    "P4_developing_continuity",
+    "P5_new_frontier",
+    "P6_optional_enrichment"
+  ],
+  "tie_breakers": [
+    "older_due_first",
+    "weekly_skill_deficit",
+    "learner_goal_relevance",
+    "curriculum_frontier_coherence",
+    "avoid_recent_repetition",
+    "content_readiness"
+  ],
+  "prerequisite_readiness": {
+    "mastery_states": ["functional", "secure"],
+    "placement_clearance_allowed": true,
+    "clearance_gap_excluded": true,
+    "lapsed_blocks_dependent_new_learning": true
+  },
+  "content_gate": {
+    "new_primary_requires_active_reviewed_content": true,
+    "scored_practice_requires_validated_content": true
+  },
+  "weekly_skill_targets_days": {
+    "SP": 5,
+    "LS": 4,
+    "RD": 3,
+    "WR": 3,
+    "PR": 3
+  },
+  "application_rules": {
+    "productive_application_required_daily": true,
+    "prefer_speaking_when_voice_available": true,
+    "voice_unavailable_fallback": ["WR", "RD"],
+    "do_not_remove_application_under_severe_review_debt": true
+  },
+  "backlog_policy": {
+    "respect_user_time_budget": true,
+    "defer_excess_due_units": true,
+    "do_not_expand_session_to_clear_backlog": true
+  },
+  "notes": [
+    "Allocation percentages are configurable V1 defaults rather than optimized constants.",
+    "The scheduler uses lexicographic priority tiers rather than an opaque weighted score as its primary decision rule.",
+    "Weekly skill targets reflect the communication-heavy product goal and must be calibrated from user adherence/results."
+  ]
+}

@@ -1,0 +1,3 @@
+-- P1-DB-001 intentionally keeps learner-facing curriculum/content seeds empty.
+-- Canonical curriculum lives in curriculum/registry.json and will be selectively
+-- promoted/seeded as reviewed content during P1-PILOT-001.

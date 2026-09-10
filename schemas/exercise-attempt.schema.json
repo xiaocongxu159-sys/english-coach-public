@@ -1,0 +1,31 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://english-coach.local/schemas/exercise-attempt.schema.json",
+  "title":"English Coach Exercise Attempt",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["id","item_id","learner_id","attempt_group_id","started_at","submitted_at","response","scoring","assistance","evidence_event_ids"],
+  "properties":{
+    "id":{"type":"string","minLength":8,"maxLength":160},
+    "item_id":{"type":"string","pattern":"^EI-(A1|A2|B1|B2)-[A-Z0-9-]+-[0-9]{3}$"},
+    "learner_id":{"type":"string","minLength":1,"maxLength":128},
+    "attempt_group_id":{"type":"string","minLength":6,"maxLength":160},
+    "started_at":{"type":"string","format":"date-time"},
+    "submitted_at":{"type":"string","format":"date-time"},
+    "response":{},
+    "scoring":{
+      "type":"object","additionalProperties":false,
+      "required":["status","rating_0_4","is_correct","evaluator_type","evaluator_confidence"],
+      "properties":{
+        "status":{"enum":["scored","unscored","needs_review"]},
+        "rating_0_4":{"type":["integer","null"],"minimum":0,"maximum":4},
+        "is_correct":{"type":["boolean","null"]},
+        "evaluator_type":{"enum":["deterministic","approved_ai_rubric","human","none"]},
+        "evaluator_confidence":{"enum":["high","medium","low","none"]},
+        "feedback":{"type":["string","null"],"maxLength":2000}
+      }
+    },
+    "assistance":{"enum":["independent","minor_prompt","major_prompt","model_then_repeat"]},
+    "evidence_event_ids":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":6,"maxLength":160}}
+  }
+}

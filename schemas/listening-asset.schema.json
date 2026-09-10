@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/listening-asset.schema.json",
+  "title": "English Coach Listening Asset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "status", "level", "mode", "title", "target_nodes", "scenario", "discourse", "audio_profile", "language_profile", "play_policy", "assessment_profile", "source", "qa"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^LA-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"},
+    "version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["draft", "reviewed", "active", "deprecated"]},
+    "level": {"enum": ["A1", "A2", "B1", "B2"]},
+    "mode": {"enum": ["guided_learning", "scored_practice", "review", "placement", "ielts_style"]},
+    "title": {"type": "string", "minLength": 3, "maxLength": 160},
+    "target_nodes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^LS-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+    "support_nodes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|PR|CF|SP|RD|WR)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+    "scenario": {
+      "type": "object", "additionalProperties": false,
+      "required": ["domain", "topic", "real_world_relevance"],
+      "properties": {
+        "domain": {"enum": ["daily_life", "travel", "service", "work", "education", "community", "media", "science", "culture", "technology", "general_academic", "other"]},
+        "topic": {"type": "string", "minLength": 2, "maxLength": 100},
+        "real_world_relevance": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 2, "maxLength": 120}}
+      }
+    },
+    "discourse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "speaker_count", "turn_taking_complexity", "structure"],
+      "properties": {
+        "type": {"enum": ["dialogue", "monologue", "interview", "discussion", "announcement", "instruction", "narrative", "presentation", "mini_lecture"]},
+        "speaker_count": {"type": "integer", "minimum": 1, "maximum": 4},
+        "turn_taking_complexity": {"enum": ["none", "simple", "moderate", "complex"]},
+        "structure": {"enum": ["linear", "simple_sections", "multi_section", "argumentative"]}
+      }
+    },
+    "audio_profile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["duration_seconds", "approx_wpm", "connected_speech", "accent_profile", "background_noise", "naturalness"],
+      "properties": {
+        "duration_seconds": {"type": "integer", "minimum": 10, "maximum": 900},
+        "approx_wpm": {"type": "integer", "minimum": 60, "maximum": 220},
+        "connected_speech": {"enum": ["very_controlled", "controlled", "natural_clear", "natural"]},
+        "accent_profile": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["north_american", "british", "australian", "new_zealand", "international_clear", "other_reviewed"]}},
+        "background_noise": {"enum": ["none", "very_light", "light_realistic"]},
+        "naturalness": {"enum": ["pedagogic", "semi_natural", "natural"]}
+      }
+    },
+    "language_profile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["lexical_ceiling", "grammar_ceiling", "unknown_lexical_ratio_max", "paraphrase_load", "inference_load", "information_density", "redundancy"],
+      "properties": {
+        "lexical_ceiling": {"enum": ["A1", "A2", "B1", "B2", "B2_plus_for_ielts_context"]},
+        "grammar_ceiling": {"enum": ["A1", "A2", "B1", "B2"]},
+        "unknown_lexical_ratio_max": {"type": "number", "minimum": 0, "maximum": 0.15},
+        "paraphrase_load": {"enum": ["none", "light", "moderate", "high"]},
+        "inference_load": {"enum": ["none", "light", "moderate"]},
+        "information_density": {"enum": ["low", "moderate", "high"]},
+        "redundancy": {"enum": ["high", "moderate", "low"]}
+      }
+    },
+    "play_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["initial_max_plays", "segment_replay_allowed", "speed_control_allowed", "transcript_unlock"],
+      "properties": {
+        "initial_max_plays": {"type": "integer", "minimum": 1, "maximum": 4},
+        "segment_replay_allowed": {"type": "boolean"},
+        "speed_control_allowed": {"type": "boolean"},
+        "transcript_unlock": {"enum": ["never", "after_first_attempt", "after_scored_attempt", "after_completion"]}
+      }
+    },
+    "assessment_profile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operations", "item_count_min", "item_count_max", "one_pass_required"],
+      "properties": {
+        "operations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["explicit_detail", "gist_main_idea", "sequence", "number_name_date", "directions_location", "paraphrase", "reference_tracking", "speaker_attitude", "inference", "speaker_position", "agreement_disagreement", "note_taking", "data_trend", "lexical_in_context"]}},
+        "item_count_min": {"type": "integer", "minimum": 1, "maximum": 20},
+        "item_count_max": {"type": "integer", "minimum": 1, "maximum": 20},
+        "one_pass_required": {"type": "boolean"}
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["origin", "copyright_status", "script_reviewed", "audio_reviewed"],
+      "properties": {
+        "origin": {"enum": ["original_human", "ai_generated_reviewed", "licensed", "open_license", "official_reference_only"]},
+        "copyright_status": {"enum": ["owned", "licensed", "open", "reference_only"]},
+        "license_notes": {"type": ["string", "null"], "maxLength": 300},
+        "script_reviewed": {"type": "boolean"},
+        "audio_reviewed": {"type": "boolean"}
+      }
+    },
+    "qa": {
+      "type": "object", "additionalProperties": false,
+      "required": ["level_reviewed", "answerability_reviewed", "audio_intelligibility_reviewed", "ambiguity_reviewed"],
+      "properties": {
+        "level_reviewed": {"type": "boolean"},
+        "answerability_reviewed": {"type": "boolean"},
+        "audio_intelligibility_reviewed": {"type": "boolean"},
+        "ambiguity_reviewed": {"type": "boolean"},
+        "notes": {"type": ["string", "null"], "maxLength": 500}
+      }
+    }
+  }
+}

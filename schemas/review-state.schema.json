@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/review-state.schema.json",
+  "title": "English Coach Review State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["review_unit_id", "algorithm", "algorithm_version", "parameters_version", "status", "due_at", "fsrs", "last_review_at", "updated_at"],
+  "properties": {
+    "review_unit_id": {"type": "string", "minLength": 8, "maxLength": 140},
+    "algorithm": {"const": "fsrs"},
+    "algorithm_version": {"type": "string", "minLength": 1, "maxLength": 40},
+    "library_name": {"type": "string", "maxLength": 80},
+    "library_version": {"type": ["string", "null"], "maxLength": 40},
+    "parameters_version": {"type": "string", "minLength": 1, "maxLength": 80},
+    "status": {"enum": ["not_scheduled", "not_due", "due", "overdue", "relearning", "suspended"]},
+    "due_at": {"type": ["string", "null"], "format": "date-time"},
+    "fsrs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["card_state", "stability", "difficulty", "scheduled_days", "elapsed_days", "reps", "lapses"],
+      "properties": {
+        "card_state": {"enum": ["New", "Learning", "Review", "Relearning"]},
+        "stability": {"type": ["number", "null"], "minimum": 0},
+        "difficulty": {"type": ["number", "null"], "minimum": 0},
+        "scheduled_days": {"type": "integer", "minimum": 0},
+        "elapsed_days": {"type": "integer", "minimum": 0},
+        "reps": {"type": "integer", "minimum": 0},
+        "lapses": {"type": "integer", "minimum": 0},
+        "retrievability": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      }
+    },
+    "last_review_at": {"type": ["string", "null"], "format": "date-time"},
+    "last_grade": {"enum": ["Again", "Hard", "Good", "Easy", null]},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/lesson-blueprint.schema.json",
+  "title": "English Coach Lesson Blueprint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "status", "level", "name", "lesson_type", "duration_minutes", "node_selection", "stages", "personalization", "content_policy", "resume_policy"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^LESB-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"},
+    "version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["draft", "reviewed", "active", "deprecated"]},
+    "level": {"enum": ["A1", "A2", "B1", "B2"]},
+    "name": {"type": "string", "minLength": 3, "maxLength": 120},
+    "lesson_type": {"enum": ["new_learning", "mixed_learning", "review", "speaking_focus", "listening_focus", "reading_focus", "writing_focus", "pronunciation_focus", "assessment_checkpoint", "ielts_practice"]},
+    "duration_minutes": {
+      "type": "object", "additionalProperties": false, "required": ["min", "target", "max"],
+      "properties": {
+        "min": {"type": "integer", "minimum": 5, "maximum": 90},
+        "target": {"type": "integer", "minimum": 5, "maximum": 90},
+        "max": {"type": "integer", "minimum": 5, "maximum": 90}
+      }
+    },
+    "node_selection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["primary_count", "support_count_max", "review_count_max", "require_hard_prerequisites_ready"],
+      "properties": {
+        "primary_domains": {"type": "array", "uniqueItems": true, "items": {"enum": ["GR", "VX", "LS", "SP", "RD", "WR", "PR", "CF"]}},
+        "primary_count": {
+          "type": "object", "additionalProperties": false, "required": ["min", "max"],
+          "properties": {
+            "min": {"type": "integer", "minimum": 0, "maximum": 4},
+            "max": {"type": "integer", "minimum": 0, "maximum": 4}
+          }
+        },
+        "support_count_max": {"type": "integer", "minimum": 0, "maximum": 10},
+        "review_count_max": {"type": "integer", "minimum": 0, "maximum": 20},
+        "require_hard_prerequisites_ready": {"const": true}
+      }
+    },
+    "stages": {
+      "type": "array", "minItems": 1, "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["key", "kind", "required", "minutes", "target_role", "evidence_types", "ai_content_mode"],
+        "properties": {
+          "key": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{1,39}$"},
+          "kind": {"enum": ["review_retrieval", "activate_context", "teach_explain", "model", "recognition", "controlled_production", "listening_application", "reading_application", "speaking_application", "writing_application", "pronunciation_application", "correction_retry", "exit_check", "summary_reflection"]},
+          "required": {"type": "boolean"},
+          "minutes": {
+            "type": "object", "additionalProperties": false, "required": ["min", "max"],
+            "properties": {
+              "min": {"type": "integer", "minimum": 0, "maximum": 30},
+              "max": {"type": "integer", "minimum": 1, "maximum": 45}
+            }
+          },
+          "target_role": {"enum": ["primary", "support", "review", "mixed", "none"]},
+          "evidence_types": {
+            "type": "array", "uniqueItems": true,
+            "items": {"enum": ["recognition", "controlled_production", "free_written_production", "free_spoken_production", "spontaneous_reuse", "listening_comprehension", "reading_comprehension", "pronunciation_intelligibility", "communication_repair"]}
+          },
+          "ai_content_mode": {"enum": ["none", "reviewed_only", "bounded_variant", "interactive_teacher"]}
+        }
+      }
+    },
+    "personalization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["learner_interest_allowed", "chinese_support", "difficulty_adjustment", "forbid_scope_expansion"],
+      "properties": {
+        "scenario_tags_allowed": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 60}},
+        "learner_interest_allowed": {"type": "boolean"},
+        "chinese_support": {"enum": ["none", "on_request", "adaptive"]},
+        "difficulty_adjustment": {"enum": ["fixed", "bounded"]},
+        "forbid_scope_expansion": {"const": true}
+      }
+    },
+    "content_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reviewed_core_required", "ai_variants_allowed", "scored_ai_variant_policy"],
+      "properties": {
+        "reviewed_core_required": {"type": "boolean"},
+        "ai_variants_allowed": {"type": "boolean"},
+        "scored_ai_variant_policy": {"enum": ["forbidden", "validated_only"]}
+      }
+    },
+    "resume_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["checkpoint_after_each_stage", "preserve_attempts"],
+      "properties": {
+        "checkpoint_after_each_stage": {"type": "boolean"},
+        "preserve_attempts": {"type": "boolean"}
+      }
+    },
+    "notes": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"lesson_type": {"const": "review"}},
+        "required": ["lesson_type"]
+      },
+      "then": {
+        "properties": {
+          "node_selection": {
+            "properties": {
+              "primary_count": {
+                "properties": {
+                  "min": {"const": 0},
+                  "max": {"const": 0}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"lesson_type": {"not": {"const": "review"}}},
+        "required": ["lesson_type"]
+      },
+      "then": {
+        "properties": {
+          "node_selection": {
+            "properties": {
+              "primary_count": {
+                "properties": {
+                  "min": {"minimum": 1},
+                  "max": {"minimum": 1}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

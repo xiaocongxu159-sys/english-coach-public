@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/daily-plan.schema.json",
+  "title": "English Coach Daily Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "learner_id", "plan_date", "time_budget_minutes", "debt_band", "allocations", "selected", "lesson_requests", "deferred", "skill_balance", "explanations", "warnings"],
+  "properties": {
+    "id": {"type": "string", "minLength": 8, "maxLength": 120},
+    "learner_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "plan_date": {"type": "string", "format": "date"},
+    "time_budget_minutes": {"type": "integer", "minimum": 10, "maximum": 120},
+    "debt_band": {"enum": ["low", "normal", "high", "severe"]},
+    "allocations": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review", "remediation", "new_learning", "application", "wrap_up"],
+      "properties": {
+        "review": {"type": "integer", "minimum": 0, "maximum": 120},
+        "remediation": {"type": "integer", "minimum": 0, "maximum": 120},
+        "new_learning": {"type": "integer", "minimum": 0, "maximum": 120},
+        "application": {"type": "integer", "minimum": 0, "maximum": 120},
+        "wrap_up": {"type": "integer", "minimum": 0, "maximum": 120}
+      }
+    },
+    "selected": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review_unit_ids", "remediation_node_ids", "continuation_node_ids", "new_node_ids", "application_node_ids"],
+      "properties": {
+        "review_unit_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 140}},
+        "remediation_node_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+        "continuation_node_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+        "new_node_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+        "application_node_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}}
+      }
+    },
+    "lesson_requests": {
+      "type": "array", "minItems": 1, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["block_type", "minutes", "blueprint_type", "primary_nodes", "support_nodes", "review_unit_ids", "required_modalities"],
+        "properties": {
+          "block_type": {"enum": ["review", "remediation", "mixed_core", "application", "checkpoint"]},
+          "minutes": {"type": "integer", "minimum": 2, "maximum": 90},
+          "blueprint_type": {"enum": ["new_learning", "mixed_learning", "review", "speaking_focus", "listening_focus", "reading_focus", "writing_focus", "pronunciation_focus", "assessment_checkpoint", "ielts_practice"]},
+          "primary_nodes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+          "support_nodes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^(GR|VX|LS|SP|RD|WR|PR|CF)-(A1|A2|B1|B2)-[A-Z0-9-]+-\\d{2}$"}},
+          "review_unit_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "maxLength": 140}},
+          "required_modalities": {"type": "array", "uniqueItems": true, "items": {"enum": ["listening", "speaking", "reading", "writing", "pronunciation"]}}
+        }
+      }
+    },
+    "deferred": {
+      "type": "object", "additionalProperties": false,
+      "required": ["due_review_units", "new_nodes", "reason_codes"],
+      "properties": {
+        "due_review_units": {"type": "integer", "minimum": 0},
+        "new_nodes": {"type": "integer", "minimum": 0},
+        "reason_codes": {"type": "array", "uniqueItems": true, "items": {"enum": ["time_budget", "review_debt", "lapsed_prerequisite", "content_unavailable", "skill_balance", "recently_practiced", "clearance_missing", "user_constraint"]}}
+      }
+    },
+    "skill_balance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["lookback_days", "deficit_domains"],
+      "properties": {
+        "lookback_days": {"type": "integer", "minimum": 1, "maximum": 30},
+        "deficit_domains": {"type": "array", "uniqueItems": true, "items": {"enum": ["LS", "SP", "RD", "WR", "PR"]}}
+      }
+    },
+    "explanations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3, "maxLength": 300}},
+    "warnings": {"type": "array", "items": {"type": "string", "maxLength": 300}}
+  }
+}

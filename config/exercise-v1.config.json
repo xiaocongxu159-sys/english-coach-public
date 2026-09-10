@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "content_class_policy": {
+    "reviewed_core": {"may_be_scored": true, "may_change_mastery": true, "may_update_review": true},
+    "validated_variant": {"may_be_scored": true, "may_change_mastery": true, "may_update_review": true},
+    "unvalidated_variant": {"may_be_scored": false, "may_change_mastery": false, "may_update_review": false},
+    "exploratory": {"may_be_scored": false, "may_change_mastery": false, "may_update_review": false}
+  },
+  "scored_variant_requirements": {
+    "template_active": true,
+    "schema_pass": true,
+    "scope_pass": true,
+    "answer_pass": true,
+    "ambiguity_pass": true,
+    "level_pass": true,
+    "independent_qa_pass": true,
+    "source_asset_must_be_active_when_required": true
+  },
+  "evaluator_policy": {
+    "deterministic_preferred_when_possible": true,
+    "rubric_minimum_confidence_for_state_change": "medium",
+    "low_confidence_state_change_allowed": false,
+    "needs_review_state_change_allowed": false
+  },
+  "attempt_policy": {
+    "one_attempt_group_one_review_update_max": true,
+    "model_then_repeat_counts_as_independent": false,
+    "major_prompt_counts_as_independent": false,
+    "retry_after_feedback_new_attempt_group": false,
+    "immediate_retry_is_practice_first": true
+  },
+  "normalization_defaults": ["trim", "collapse_whitespace"],
+  "multiple_choice": {
+    "single_correct_exactly_one": true,
+    "duplicate_option_text_forbidden": true,
+    "all_of_the_above_default_forbidden": true,
+    "none_of_the_above_default_forbidden": true,
+    "distractors_must_be_plausible_but_defensibly_wrong": true
+  },
+  "fill_short_answer": {
+    "accepted_answer_set_required": true,
+    "casefold_default_unless_case_is_target": true,
+    "spelling_must_be_explicit_if_scored": true,
+    "word_limit_must_be_explicit_for_ielts_style": true
+  },
+  "production": {
+    "exact_phrase_matching_for_free_output_forbidden": true,
+    "rubric_must_separate_target_feature_from_overall_communication": true,
+    "feedback_must_not_overcorrect_unrelated_minor_errors": true
+  },
+  "listening_reading": {
+    "answer_support_locator_required_at_validation": true,
+    "world_knowledge_dependency_forbidden": true,
+    "source_asset_final_version_required_for_scored_item": true
+  },
+  "generation": {
+    "free_prompt_scored_generation_forbidden": true,
+    "generator_must_receive_template_and_target_nodes": true,
+    "generator_must_receive_level_and_scope_exclusions": true,
+    "variant_seed_or_key_recorded": true
+  }
+}

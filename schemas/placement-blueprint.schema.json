@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-coach.local/schemas/placement-blueprint.schema.json",
+  "title": "English Coach Placement Blueprint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "status", "levels", "duration_minutes", "stages", "domain_routes", "clearance_policy", "output_policy"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^PLCB-[A-Z0-9-]+-\\d{2}$"},
+    "version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["draft", "reviewed", "active", "deprecated"]},
+    "levels": {"type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": {"enum": ["A1", "A2", "B1", "B2"]}},
+    "duration_minutes": {
+      "type": "object", "additionalProperties": false, "required": ["target", "max"],
+      "properties": {
+        "target": {"type": "integer", "minimum": 20, "maximum": 90},
+        "max": {"type": "integer", "minimum": 20, "maximum": 120}
+      }
+    },
+    "stages": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"enum": ["intake", "routing", "boundary_verification", "productive_confirmation", "profile_generation"]}},
+    "domain_routes": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["domain", "mode", "anchor_set_ref", "minimum_direct_evidence", "productive_required"],
+        "properties": {
+          "domain": {"enum": ["GR", "VX", "LS", "SP", "RD", "WR", "PR", "CF"]},
+          "mode": {"enum": ["adaptive_receptive", "adaptive_productive", "embedded_productive", "hybrid"]},
+          "anchor_set_ref": {"type": "string", "minLength": 1, "maxLength": 160},
+          "minimum_direct_evidence": {"type": "integer", "minimum": 1, "maximum": 30},
+          "productive_required": {"type": "boolean"}
+        }
+      }
+    },
+    "clearance_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["enabled", "does_not_change_mastery", "exception_gaps_block_clearance", "revocable"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "does_not_change_mastery": {"const": true},
+        "exception_gaps_block_clearance": {"const": true},
+        "revocable": {"const": true}
+      }
+    },
+    "output_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["per_domain_band", "overall_start_band", "confidence", "direct_node_evidence_only_for_mastery", "ielts_score_forbidden"],
+      "properties": {
+        "per_domain_band": {"const": true},
+        "overall_start_band": {"const": true},
+        "confidence": {"const": true},
+        "direct_node_evidence_only_for_mastery": {"const": true},
+        "ielts_score_forbidden": {"const": true}
+      }
+    }
+  }
+}

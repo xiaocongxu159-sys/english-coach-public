@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.20.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate Phase 0 artifacts
+        run: npm run validate:phase0
+
+      - name: Verify canonical curriculum registry
+        run: npm run curriculum:check
+
+      - name: Validate reviewed A1 pilot content
+        run: npm run pilot:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  database-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.20.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Start minimal local Supabase stack
+        run: >-
+          npx supabase start
+          -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Rebuild database from empty state
+        run: npx supabase db reset --local
+
+      - name: Export local Supabase credentials
+        shell: bash
+        run: |
+          npx supabase status -o env > /tmp/supabase-status.env
+          set -a
+          source /tmp/supabase-status.env
+          set +a
+          echo "SUPABASE_TEST_URL=${API_URL}" >> "$GITHUB_ENV"
+          echo "SUPABASE_TEST_ANON_KEY=${ANON_KEY}" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
+
+      - name: Verify auth and row-level security isolation
+        run: npm run test:db
+
+      - name: Seed reviewed A1 pilot content twice
+        run: |
+          npm run pilot:seed
+          npm run pilot:seed
+
+      - name: Verify pilot import, visibility and trust boundaries
+        run: npm run test:pilot-db
+
+      - name: Verify deterministic learning-engine persistence and Mastery transitions
+        run: npm run test:engine-db
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: npx supabase stop --no-backup
