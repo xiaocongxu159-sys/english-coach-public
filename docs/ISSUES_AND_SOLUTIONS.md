@@ -33,6 +33,10 @@ This is the active project issue ledger. Full pre-P1-UI historical issue prose i
 | ISSUE-025 | Frozen Daily Plan conflicted with current Review state on Today | Resolved / main verified |
 | ISSUE-026 | Production signup callback could silently fall back to localhost | Resolved / main verified |
 | ISSUE-027 | Generic PWA checklist pressure conflicted with frozen iPhone contract | Resolved by scope + compatibility hardening; physical verification pending |
+| ISSUE-028 | Directly publicizing the historical private repository would expose old metadata/history | Resolved with clean-snapshot public repository |
+| ISSUE-029 | PowerShell instructions were accidentally executed in Ubuntu Bash | Resolved; accidental `/home/ubuntu/.git` removed before any push |
+| ISSUE-030 | First migration secret scan produced broad false positives | Resolved with boundary-aware precise scanner |
+| ISSUE-031 | Production signup succeeds at app level but confirmation email is not received | Open / investigating |
 
 Detailed Engine/UI/PWA context remains in:
 
@@ -40,6 +44,7 @@ Detailed Engine/UI/PWA context remains in:
 - `docs/P1_UI_001B_HANDOFF.md`
 - `docs/P1_UI_001C_HANDOFF.md`
 - `docs/P1_PWA_001_HANDOFF.md`
+- `docs/P1_PWA_001B_HANDOFF.md`
 
 ---
 
@@ -136,14 +141,122 @@ Only a real hosted HTTPS deployment on the user's physical iPhone can verify Add
 
 ---
 
+## ISSUE-028 — Direct public conversion would expose historical repository metadata
+
+**Date:** 2026-09-10  
+**Module:** Repository governance / public CI migration  
+**Status:** Resolved
+
+### Problem
+
+The historical private repository contained old Git commit metadata with a personal author email. Changing that repository's visibility directly to Public would expose its existing commit/branch/PR history, even though the current source tree itself did not contain an obvious live secret.
+
+### Solution
+
+A new public repository, `xiaocongxu159-sys/english-coach-public`, was created. PR #45 source was exported without `.git`, scanned, then committed as a brand-new root commit using GitHub noreply identity.
+
+### Verification
+
+The initial public root commit is `30fb6b5298f14654325ec7f0cefe93e163d451cf`; its source tree matches the selected PR #45 source tree while parents are empty. Public GitHub Actions passed both permanent jobs.
+
+The old private repository remains private as historical/archive context.
+
+---
+
+## ISSUE-029 — PowerShell instructions were executed in Ubuntu Bash
+
+**Date:** 2026-09-10  
+**Module:** Repository migration procedure  
+**Status:** Resolved / no remote impact
+
+### Problem
+
+An initial migration command block was written for PowerShell, but the active terminal was Ubuntu Bash. PowerShell-only commands such as `Set-Location` and `Remove-Item` were not recognized. Bash then initialized an accidental Git repository at `/home/ubuntu/.git` before the mistake was stopped.
+
+### Risk
+
+Running `git add .` from `/home/ubuntu` could have staged unrelated server files if allowed to continue. This was a local-only risk at that point; no public push occurred.
+
+### Resolution
+
+The terminal was stopped, `/home/ubuntu/.git` was explicitly removed, and the public repository was independently verified to remain empty. The migration was restarted with Ubuntu-only commands in isolated `/tmp/english-coach-*` directories.
+
+### Prevention
+
+For this project, server-side operational instructions must state and use the exact shell environment. Do not mix PowerShell and Bash syntax in the same operational path.
+
+---
+
+## ISSUE-030 — Broad secret scan produced false positives
+
+**Date:** 2026-09-10  
+**Module:** Repository migration safety scan  
+**Status:** Resolved
+
+### Problem
+
+The first grep-based secret scanner matched ordinary project strings containing sequences such as `re_`, producing false positives in configuration names and learning-content fields.
+
+### Resolution
+
+The push was correctly blocked before any publication. The scanner was replaced with a boundary-aware Python pattern check for concrete credential formats including private keys, Supabase secret keys, Resend API keys, GitHub tokens, AWS access keys, Google API keys and JWT-shaped values.
+
+The precise scan returned `PRECISE_SECRET_SCAN_OK` before the clean root commit was pushed.
+
+---
+
+## ISSUE-031 — Production signup email not received
+
+**Date:** 2026-09-10  
+**Module:** P1-PWA-001B / hosted Supabase Auth email delivery  
+**Status:** Open / investigating
+
+### Observed behavior
+
+A real production signup returns the learner-facing success message:
+
+```text
+Check your email to confirm your account.
+```
+
+but the confirmation email is not received.
+
+### What is already known
+
+- the new public repository builds and deploys successfully;
+- public `validate` and `database-integration` CI jobs pass;
+- Vercel production deployment from `english-coach-public/main` is Ready;
+- the existing Vercel environment variable names are still present;
+- application signup still uses Supabase Auth `signUp()`;
+- PR #45 changes the result shown after a confirmation link is opened, not the upstream mail-delivery provider.
+
+### What is not yet proven
+
+It is not yet proven whether the blocker is caused by SMTP configuration, Auth rate limiting, provider delivery, duplicate-user behavior, or another hosted Supabase Auth condition. It should not be attributed to repository visibility without evidence.
+
+### Diagnostic order
+
+Do not change SMTP or application code first.
+
+```text
+Authentication → Users
+→ verify test user exists and confirmation state
+→ Auth Logs at exact signup timestamp
+→ inspect mail/SMTP/rate-limit errors
+→ inspect existing SMTP/Auth mail configuration
+→ determine root cause
+→ make narrow fix only after evidence
+```
+
+After any fix, repeat a fresh production signup and require real mail delivery, explicit `/verify-email` success, login and authenticated Today before closing the issue.
+
+---
+
 ## Current open / accepted deployment limitations
 
-- ISSUE-007: physical iPhone validation still requires a reachable HTTPS deployment;
 - P1-PWA-001A is COMPLETE / merged-main verified;
-- hosted Supabase project is not yet connected;
-- production secrets and hosted Auth URLs/template are not configured;
-- hosted migration + reviewed seed have not run;
-- Vercel production deployment does not yet exist;
-- hosted signup/confirmation smoke is not verified;
+- P1-PWA-001B repository migration, public CI and Vercel production path are verified;
+- ISSUE-031 confirmation email delivery remains open;
+- hosted signup/confirmation/login/Today smoke is not yet complete;
 - physical iPhone Home Screen/install/session/interruption/network-retry tests are pending;
 - full deployed P1-E2E-001 remains pending.

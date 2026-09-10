@@ -107,20 +107,80 @@ Detailed handoff: `docs/P1_PWA_001_HANDOFF.md`.
 
 ---
 
-## Current handoff — P1-PWA-001B hosted environment + reachable deployment
+## 2026-09-10 — P1-PWA-001B public repository + CI + Vercel production path — VERIFIED PORTION COMPLETE
 
-Exact next slice:
+The project was migrated from the historical private repository to a clean public canonical repository without carrying old Git history or personal commit-email metadata into the public history.
+
+Verified sequence:
 
 ```text
-hosted Supabase
-→ migration preview + apply
-→ validated Pilot/Review seed twice
-→ production Auth Site URL / exact callback / token-hash email template
-→ Vercel Node 24 deployment + production env
-→ reachable HTTPS app
-→ hosted desktop signup/confirm/login/Today smoke
+old private repository retained as history/archive
+→ PR #45 source head d2736c3 selected
+→ source exported without `.git`
+→ sensitive-file and precise-secret scans PASS
+→ new public repository `xiaocongxu159-sys/english-coach-public`
+→ one clean root commit `30fb6b5...` with GitHub noreply identity
+→ public GitHub Actions run 34459279725
+→ validate PASS
+→ database-integration PASS
+→ existing Vercel project disconnected from old private repo
+→ Vercel GitHub App granted access to public repo
+→ existing Vercel project connected to `english-coach-public/main`
+→ production environment variable names preserved
+→ no-code trigger commit `d65900b...`
+→ Vercel Production deployment Ready / GitHub Vercel status success
+```
+
+The clean public root commit and the selected private PR #45 source state share the same Git tree, so source content was preserved while the old repository history was not published.
+
+The repository/CI/Vercel portion of P1-PWA-001B is therefore verified complete.
+
+Detailed handoff: `docs/P1_PWA_001B_HANDOFF.md`.
+
+### Current blocker — hosted confirmation email delivery
+
+A real production signup reaches the application success state:
+
+```text
+Create account
+→ Check your email to confirm your account.
+```
+
+but the confirmation email was not received.
+
+This is not yet attributed to the public/private repository change. The application still uses Supabase Auth `signUp()` for signup email delivery; PR #45 changed the post-click verification-result UX rather than replacing the mail sender.
+
+Next diagnostic order is intentionally read-first / no speculative configuration changes:
+
+```text
+Supabase Authentication → Users
+→ Supabase Auth Logs at exact signup time
+→ inspect existing SMTP/Auth mail configuration
+→ prove root cause
+→ make the narrowest fix
+→ repeat production signup/confirm/login/Today smoke
+```
+
+P1-PWA-001B remains **OPEN** until email delivery, explicit `/verify-email` success, login and authenticated Today are verified.
+
+---
+
+## Current handoff — P1-PWA-001B email delivery diagnosis
+
+Repository migration, public CI and Vercel production are now verified. The exact next slice is:
+
+```text
+inspect production Supabase signup user state
+→ inspect Auth logs for the failed mail delivery
+→ inspect existing SMTP/Auth mail configuration without changing it
+→ determine root cause
+→ apply only the required fix
+→ verify a fresh signup receives confirmation email
+→ verify explicit Email verified page
+→ sign in
+→ authenticated Today smoke
 → P1-PWA-001C physical iPhone smoke
 → P1-E2E-001 deployed vertical gate
 ```
 
-Do not activate the remaining 733 draft curriculum nodes and do not claim offline behavior that is not implemented.
+Documentation discipline is mandatory: every completed slice must update its handoff and this development log in the same work cycle; new issues/root causes/solutions must also update `docs/ISSUES_AND_SOLUTIONS.md` before the slice is marked complete.
