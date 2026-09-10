@@ -3,75 +3,73 @@
 **Date:** 2026-09-10  
 **Parent module:** P1-PWA-001 — hosted/reachable deployment + physical iPhone PWA validation  
 **Slice:** P1-PWA-001B — hosted environment, public-repository migration and production deployment  
-**Status:** PARTIALLY COMPLETE — repository/CI/Vercel migration verified; hosted email-confirmation smoke is BLOCKED  
+**Status:** PARTIALLY COMPLETE — repository/CI/Vercel migration verified; hosted email-confirmation smoke BLOCKED  
 **Canonical repository:** `xiaocongxu159-sys/english-coach-public`  
-**Current production branch:** `main`  
+**Production branch:** `main`  
 **Initial clean public snapshot:** `30fb6b5298f14654325ec7f0cefe93e163d451cf`  
-**Current production trigger commit:** `d65900bf7873f8d8ac38a1dbb617dd82ffe5fdca`  
-**Public CI run:** `34459279725` — `validate` PASS + `database-integration` PASS  
+**Production trigger commit:** `d65900bf7873f8d8ac38a1dbb617dd82ffe5fdca`  
+**Documentation release:** PR #1 squash-merged as `7642800b54939d203c83ab80352ec3f063f9ba3a`  
+**Merged-main CI:** run `34482865644` — `validate` PASS + `database-integration` PASS
 
-## 1. Why the repository migration was done
+## 1. Repository migration decision
 
-The original `xiaocongxu159-sys/english-coach` repository remained private and had historical Git metadata that included a personal commit email. Making that repository public directly would have exposed old commit/branch/PR history.
+The original `xiaocongxu159-sys/english-coach` repository remains private because historical Git metadata contains a personal commit email. Directly changing that repository to Public would have exposed old commit/branch/PR history.
 
-The migration therefore used a clean-snapshot strategy:
+Migration therefore used:
 
 ```text
-private historical repository retained
-→ exact PR #45 source state selected
-→ source exported without `.git`
-→ secret/file-name safety scans
+old private repository retained
+→ exact old PR #45 source state selected
+→ source exported without .git
+→ sensitive-file and secret-pattern scans
 → brand-new Git history
-→ GitHub noreply commit identity
+→ GitHub noreply identity
 → new public repository
 ```
 
-The old private repository remains an archive/history source and is not the active production repository.
+The old private repository is archive/history only. New development and Production delivery use `english-coach-public`.
 
 ## 2. Exact source state migrated
 
-The source snapshot was taken from old private PR #45 head:
+Old private PR #45 head:
 
 ```text
 d2736c3ab666959b3bd8831ed6386e13191fcb6e
 ```
 
-Its Git tree was:
+Source tree:
 
 ```text
 0a76c785d4854e85361bb354e02cbdb3e06821c8
 ```
 
-The clean public root commit `30fb6b5...` points to the same tree, so code content is identical while old Git history is not carried into the public repository.
+The clean public root commit pointed to the same source tree, preserving application content while removing old Git history.
 
-The migrated source includes the dedicated email verification result page from PR #45:
+PR #45 added the explicit verification result path:
 
 ```text
 /auth/confirm
 → /verify-email?status=success|error
-→ explicit learner-visible verification result
+→ explicit Email verified / Verification failed page
 ```
 
-## 3. Public repository privacy/safety verification
+## 3. Public privacy and secret checks
 
-Verified before push:
+Verified before first public push:
 
-- no `.env`, `.env.local`, `.env.production`, private-key PEM, or key files in the exported snapshot;
-- precise pattern scan found no Supabase secret key, Resend API key, GitHub token, AWS access key, Google API key, JWT, or private key material;
+- no tracked `.env`, `.env.local`, `.env.production`, private-key PEM or key file;
+- no detected Supabase secret, Resend API key, GitHub token, AWS key, Google API key, JWT or private key material;
 - `.env.example` contains placeholders only;
-- `.gitignore` continues to exclude `.env*` except `.env.example`, `.vercel`, PEM files and generated/local tooling paths;
-- initial public commit count was exactly one;
-- commit author email used GitHub `users.noreply.github.com` identity;
-- GitHub account setting `Keep my email addresses private` was enabled;
-- `Block command line pushes that expose my email` was enabled.
+- `.gitignore` excludes `.env*` except `.env.example`, `.vercel`, PEM and local/generated paths;
+- initial public history contained one root commit;
+- commit identity used `users.noreply.github.com`;
+- GitHub account email privacy and private-email push blocking were enabled.
 
-No secret values are recorded in this document.
+No secret values are recorded here.
 
 ## 4. Public CI verification
 
-The first public push triggered GitHub Actions normally on GitHub-hosted runners.
-
-Run:
+Initial public CI run:
 
 ```text
 34459279725
@@ -84,45 +82,42 @@ validate              PASS
 database-integration  PASS
 ```
 
-`validate` passed:
+The documentation handoff release was then merged through Public PR #1:
 
-- dependency install;
-- Phase 0 validation;
-- canonical curriculum registry verification;
-- reviewed A1 Pilot validation;
-- lint;
-- typecheck;
-- tests;
-- production build.
+```text
+7642800b54939d203c83ab80352ec3f063f9ba3a
+```
 
-`database-integration` passed:
+Merged-main CI run:
 
-- minimal local Supabase startup;
-- empty-state database rebuild;
-- local credential export;
-- Auth/RLS isolation verification;
-- reviewed Pilot seed twice/idempotency;
-- visibility/trust-boundary checks;
-- deterministic learning-engine persistence and Mastery transition checks;
-- clean Supabase shutdown.
+```text
+34482865644
+```
 
-Therefore the repository migration did not break the permanent application or fresh-database gates.
+Result:
+
+```text
+validate              PASS
+database-integration  PASS
+```
+
+Therefore the Public repository and documentation baseline are merged-main verified.
 
 ## 5. Vercel Git migration
 
-The existing Vercel project `english-coach` was preserved. The project itself was not deleted or recreated.
+The existing Vercel project `english-coach` was preserved. Domains/project configuration were not intentionally recreated.
 
-Migration sequence:
+Sequence:
 
 ```text
-disconnect old Git repository
-→ grant Vercel GitHub App access to `english-coach-public`
-→ connect `xiaocongxu159-sys/english-coach-public`
-→ keep production branch `main`
-→ preserve existing project settings/environment variables
+disconnect old private Git repository
+→ grant Vercel GitHub App access to english-coach-public
+→ connect xiaocongxu159-sys/english-coach-public
+→ keep Production branch main
+→ preserve existing Vercel project environment variables
 ```
 
-The following environment variable names remained present for Production and Preview:
+Environment-variable names present for Production and Preview:
 
 ```text
 NEXT_PUBLIC_APP_URL
@@ -131,109 +126,115 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Values remain secret and are intentionally not recorded here.
+Values remain secret and are not stored in Git documentation.
 
-Git LFS remains disabled because the current repository does not require it. `Require Verified Commits` remains disabled/inherited; no change was required for this migration.
-
-## 6. Production deployment verification
-
-Because the initial clean snapshot was pushed before the new Git connection was attached, Vercel did not retrospectively create a production deployment.
-
-A no-code-change commit was therefore created only to trigger the newly connected Git integration:
+Because the initial public snapshot predated the new Vercel Git connection, a no-code-change commit was created to trigger Production:
 
 ```text
 d65900bf7873f8d8ac38a1dbb617dd82ffe5fdca
 chore: trigger Vercel deployment
 ```
 
-The commit used GitHub noreply identity and changed no files.
+Vercel reported Production `Ready`, and GitHub reported Vercel `success`.
 
-Vercel then created a deployment from:
-
-```text
-repository: english-coach-public
-branch: main
-environment: Production
-commit: d65900b...
-status: Ready
-```
-
-GitHub commit status also reported Vercel `success`.
-
-Therefore the new canonical delivery path is verified:
+Verified path:
 
 ```text
 english-coach-public/main
 → GitHub Actions
 → Vercel Git integration
-→ Production deployment
+→ Production
+```
+
+## 6. Auth source-of-truth clarification
+
+Older P1-PWA-001A documentation stated that `signup()` passed `emailRedirectTo` built from `getAppUrl()`.
+
+That was true at the 001A release commit, but it was later intentionally superseded by old private PR #44:
+
+```text
+fix: make Supabase Site URL the confirmation source of truth
+```
+
+PR #44 removed `emailRedirectTo` from both:
+
+- `supabase.auth.signUp(...)`
+- `supabase.auth.resend(...)`
+
+Current production confirmation destination therefore depends on hosted Supabase Auth Site URL and the confirmation-email template. This is intentional current code, not an accidental omission from the public migration.
+
+The application still owns confirmation verification/result handling:
+
+```text
+/auth/confirm?token_hash=<hash>&type=email
+→ Supabase verifyOtp()
+→ /verify-email?status=success|error
 ```
 
 ## 7. Hosted signup/email smoke — current blocker
 
-A real production signup was attempted after the public-repository deployment.
+Real Production signup was attempted after the Public-repository deployment.
 
-Observed application result:
+Observed:
 
 ```text
 Create account
-→ `Check your email to confirm your account.`
+→ “Check your email to confirm your account.”
 → no confirmation email received
 ```
 
-The application signup action still calls `supabase.auth.signUp(...)`. The success message means the sign-up call returned without an immediate application-level error; it does not independently prove downstream email delivery.
+Current signup code calls `supabase.auth.signUp(...)`. The application message means no immediate sign-up API error was surfaced; it does not prove that a confirmation email was accepted by the SMTP provider or delivered.
 
-The repository migration itself did not intentionally change the email-sending mechanism. PR #45 changed the confirmation-result UX after a learner opens a confirmation link; it did not replace Supabase Auth email delivery.
+Repository Public/Private visibility does not control Supabase SMTP delivery. The mail path must be diagnosed independently.
 
-**Current status:** unresolved. Do not claim P1-PWA-001B complete until production email delivery and confirmation are proven.
+Previously established production design used hosted Supabase Auth with Resend SMTP. Do not overwrite/reconfigure it speculatively before checking evidence.
 
-## 8. Investigation rule for the email blocker
-
-Do not make speculative SMTP/code changes first.
-
-Required diagnostic order:
+## 8. Required diagnostic order
 
 ```text
 1. Supabase Authentication → Users
    - verify whether the test signup created a user
-   - inspect confirmation state
+   - inspect email confirmation state
 
 2. Supabase Auth Logs
    - inspect the exact signup timestamp
-   - look for mail/SMTP/rate-limit/delivery errors
+   - identify SMTP, mail-hook, rate-limit or delivery errors
 
-3. Supabase Auth SMTP configuration
-   - inspect current configuration only
-   - compare with the previously working state if evidence exists
+3. Supabase SMTP configuration
+   - confirm custom SMTP remains enabled
+   - verify sender/domain/config state without exposing credentials
 
-4. Only after root cause is proven:
-   - change SMTP/Auth configuration or code as narrowly as required
-   - re-run CI if code changes
-   - redeploy if required
-   - repeat real signup/confirmation/login smoke
+4. Resend logs
+   - verify whether Supabase handed a message to Resend
+   - inspect delivered / bounced / rejected / failed status
+
+5. Only after root cause is proven
+   - make the narrowest configuration or code correction
+   - run CI if code changes
+   - deploy if required
+   - repeat real signup → email → confirm → login → Today
 ```
 
-Do not expose SMTP passwords, service-role keys or API keys in screenshots, Git commits or documentation.
+Do not expose SMTP passwords, API keys, service-role keys or other secret values in screenshots, issues or Git commits.
 
-## 9. Remaining P1-PWA-001B acceptance
+## 9. Remaining 001B acceptance
 
-P1-PWA-001B can be marked COMPLETE only when all of the following are true:
+```text
+Production HTTPS reachable                 PASS
+Public repository CI                       PASS
+Vercel Production from public main         PASS
+New learner signup request accepted        PASS
+Confirmation email actually delivered      BLOCKED
+/verify-email explicit success state       PENDING
+Learner sign-in                            PENDING
+Authenticated Today                        PENDING
+```
 
-- production HTTPS app reachable;
-- public repository CI remains green;
-- Vercel production deployment from public `main` is Ready;
-- a new learner can sign up;
-- confirmation email is actually delivered;
-- learner opens the confirmation link;
-- `/verify-email` shows explicit `Email verified` success state;
-- learner can sign in;
-- learner reaches authenticated Today successfully.
+P1-PWA-001B must not be marked COMPLETE until all remaining Auth smoke items pass.
 
-Repository/CI/Vercel items are complete. Email delivery/confirmation/login/Today smoke remains pending.
+## 10. Next slice
 
-## 10. Next slice after hosted desktop smoke
-
-After P1-PWA-001B passes, proceed to **P1-PWA-001C physical iPhone validation**:
+After 001B hosted desktop smoke passes, proceed to **P1-PWA-001C physical iPhone validation**:
 
 - open final HTTPS origin;
 - Add to Home Screen;
@@ -244,22 +245,24 @@ After P1-PWA-001B passes, proceed to **P1-PWA-001C physical iPhone validation**:
 - test network interruption then Retry;
 - confirm authoritative persisted state resumes correctly.
 
-Only after 001C should the full deployed P1-E2E-001 vertical gate be closed.
+Then execute deployed **P1-E2E-001** before Phase 2.
 
-## 11. Documentation discipline — mandatory going forward
+## 11. Documentation discipline — mandatory
 
-A slice is not considered formally complete until the repository documentation is updated in the same work cycle.
+A slice is not formally complete until documentation and verification agree.
 
-For every completed slice:
+For every slice:
 
 ```text
-implementation/configuration work
+implementation/configuration
 → verification evidence
-→ update module handoff
+→ update module HANDOFF
 → update DEVELOPMENT_LOG
-→ update ISSUES_AND_SOLUTIONS when a new issue/root cause/solution exists
-→ CI/release verification
-→ then mark the slice COMPLETE
+→ update ISSUES_AND_SOLUTIONS if an issue/root cause/solution exists
+→ PR CI
+→ merge
+→ merged-main CI
+→ mark COMPLETE
 ```
 
-Do not defer handoff documentation to a later phase. If a blocker appears before completion, record the verified completed portion plus the blocker and exact next diagnostic step, as done in this handoff.
+If blocked, record the completed portion, blocker, evidence and exact next diagnostic step in the same work cycle.
