@@ -3,7 +3,7 @@
 **Date opened:** 2026-09-11  
 **Parent module:** P1-PWA-001 — hosted/reachable deployment + physical iPhone PWA validation  
 **Slice:** P1-PWA-001C — physical iPhone validation  
-**Status:** IN PROGRESS — waiting on physical-device evidence
+**Status:** IN PROGRESS — Safari install gate passed; standalone/session/touch/interruption checks remain
 
 ## 1. Entry conditions
 
@@ -68,9 +68,9 @@ Any defect found during physical validation must first be reproduced and scoped 
 ## 4. Acceptance matrix
 
 ```text
-Safari HTTPS open                         PENDING
-Add to Home Screen                        PENDING
-Home Screen icon present                  PENDING
+Safari HTTPS open                         PASS — physical iPhone
+Add to Home Screen                        PASS — physical iPhone
+Home Screen icon present                  PASS — screenshot evidence received
 Standalone launch                         PENDING
 Existing auth/session restored            PENDING
 Today responsive/touch                    PENDING
@@ -83,7 +83,20 @@ Retry surface usable                      PENDING
 Persisted state resumes correctly         PENDING
 ```
 
-## 5. Evidence discipline
+## 5. Physical evidence — install gate
+
+On 2026-09-11 the learner provided a physical iPhone Home Screen screenshot after using Safari → Share → Add to Home Screen.
+
+Observed result:
+
+```text
+English Coach Home Screen icon visible
+installation completed on the physical device
+```
+
+This verifies the first physical-device installation gate. The screenshot is user-provided acceptance evidence; it is not treated as proof of standalone launch or session persistence until those interactions are performed separately.
+
+## 6. Evidence discipline
 
 Physical-device checks must be based on actual iPhone behavior. Desktop responsive emulation is not accepted as a substitute.
 
@@ -99,27 +112,25 @@ screenshot when useful
 
 Do not apply speculative fixes from screenshots alone when a reproducible interaction is needed.
 
-## 6. First manual gate
+## 7. Next manual gate
 
-On the physical iPhone:
+From the physical iPhone Home Screen:
 
 ```text
-Safari
-→ open the same Production HTTPS URL used for the verified desktop smoke
-→ Share
-→ Add to Home Screen
-→ Add
-→ return to the iPhone Home Screen
+tap the installed English Coach icon
+→ confirm it opens without Safari browser chrome/address bar
+→ confirm whether the existing authenticated session is restored
+→ inspect Today layout/touch usability
 ```
 
-Required evidence for this first gate:
+Required evidence:
 
-- the English Coach icon is visible on the iPhone Home Screen; and
-- ideally one screenshot showing the installed icon.
+- one screenshot of the app after launching from the Home Screen;
+- whether it opened directly to Today or asked for sign-in.
 
-Do not continue to later interruption/network tests until this basic installation gate passes.
+This next gate can validate standalone launch, session restoration and the first mobile Today rendering in one pass.
 
-## 7. Exit condition
+## 8. Exit condition
 
 P1-PWA-001C is COMPLETE only when all required physical-iPhone checks pass or any discovered defects are fixed, redeployed and re-verified on the physical device.
 
