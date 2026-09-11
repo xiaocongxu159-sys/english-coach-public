@@ -36,7 +36,7 @@ This is the active project issue ledger. Full pre-P1-UI historical issue prose i
 | ISSUE-028 | Directly publicizing the historical private repository would expose old metadata/history | Resolved with clean-snapshot public repository |
 | ISSUE-029 | PowerShell instructions were accidentally executed in Ubuntu Bash | Resolved; accidental `/home/ubuntu/.git` removed before any push |
 | ISSUE-030 | First migration secret scan produced broad false positives | Resolved with boundary-aware precise scanner |
-| ISSUE-031 | Production signup succeeds at app level but confirmation email is not received | Open / investigating |
+| ISSUE-031 | Production signup appeared to succeed but no confirmation email arrived | Root cause proven: repeated signup of existing account; fresh-account smoke still pending |
 
 Detailed Engine/UI/PWA context remains in:
 
@@ -83,15 +83,11 @@ Added application-owned `getAppUrl()` validation:
 - credentials, query, hash and nested paths are rejected;
 - value is normalized to the origin.
 
-`signup()` now derives `emailRedirectTo` from this helper.
+`signup()` used this helper at the P1-PWA-001A release. That application-level `emailRedirectTo` behavior was later intentionally superseded by old private PR #44, which made hosted Supabase Site URL the confirmation source of truth.
 
 ### Verification
 
 `test/app-url.test.mts` permanently covers development fallback, production missing-variable rejection, HTTP rejection, normalized HTTPS and malformed/path/query/hash rejection. Feature code CI #236, final PR CI #242 and merged-main CI #243 all passed application + fresh-Supabase. PR #38 squash-merged as `2c32d11f078dd8bdee784d8b7251e9aba998b7f6`.
-
-### Remaining limitation
-
-The actual hosted production origin and confirmation email behavior still require P1-PWA-001B deployment verification.
 
 ---
 
@@ -205,50 +201,68 @@ The precise scan returned `PRECISE_SECRET_SCAN_OK` before the clean root commit 
 
 ---
 
-## ISSUE-031 — Production signup email not received
+## ISSUE-031 — Production signup appeared successful but no confirmation email arrived
 
-**Date:** 2026-09-10  
-**Module:** P1-PWA-001B / hosted Supabase Auth email delivery  
-**Status:** Open / investigating
+**Date diagnosed:** 2026-09-11  
+**Module:** P1-PWA-001B / hosted Supabase Auth signup smoke  
+**Status:** Root cause proven; fresh-account acceptance test still pending
 
 ### Observed behavior
 
-A real production signup returns the learner-facing success message:
+The Production signup form returned:
 
 ```text
 Check your email to confirm your account.
 ```
 
-but the confirmation email is not received.
+but no new confirmation email arrived.
 
-### What is already known
+### Evidence
 
-- the new public repository builds and deploys successfully;
-- public `validate` and `database-integration` CI jobs pass;
-- Vercel production deployment from `english-coach-public/main` is Ready;
-- the existing Vercel environment variable names are still present;
-- application signup still uses Supabase Auth `signUp()`;
-- PR #45 changes the result shown after a confirmation link is opened, not the upstream mail-delivery provider.
+Read-only production diagnostics showed:
 
-### What is not yet proven
-
-It is not yet proven whether the blocker is caused by SMTP configuration, Auth rate limiting, provider delivery, duplicate-user behavior, or another hosted Supabase Auth condition. It should not be attributed to repository visibility without evidence.
-
-### Diagnostic order
-
-Do not change SMTP or application code first.
+1. `Authentication → Users` contained only the pre-existing account; no new user was created by the test attempt.
+2. Unified Supabase Auth audit logs for the attempted signup contained:
 
 ```text
-Authentication → Users
-→ verify test user exists and confirmation state
-→ Auth Logs at exact signup timestamp
-→ inspect mail/SMTP/rate-limit errors
-→ inspect existing SMTP/Auth mail configuration
-→ determine root cause
-→ make narrow fix only after evidence
+action = user_repeated_signup
 ```
 
-After any fix, repeat a fresh production signup and require real mail delivery, explicit `/verify-email` success, login and authenticated Today before closing the issue.
+3. The audit event actor matched the already-existing account used for the test.
+
+### Root cause
+
+The smoke test reused an email address that was already registered. Supabase intentionally treats repeated signup in a way that avoids revealing whether an account exists. The application-level `signUp()` call therefore did not surface a normal “already registered” error to the learner-facing UI, and the page continued to show the generic confirmation-email message.
+
+This was **not evidence of a Public GitHub repository regression**, Vercel deployment failure, or SMTP outage.
+
+### Resolution / next acceptance test
+
+No SMTP, Resend, Vercel or application-code change is justified from this incident.
+
+The next test must use an email address that has never been registered in this Supabase project:
+
+```text
+fresh email
+→ Create account
+→ new user appears with current Created at timestamp
+→ confirmation email arrives
+→ open confirmation link
+→ explicit /verify-email success state
+→ sign in
+→ authenticated Today
+```
+
+Only if that fresh-account test creates a new unconfirmed user but the email still fails to arrive should SMTP/Resend delivery diagnostics resume.
+
+### Prevention
+
+Production Auth smoke procedures must distinguish:
+
+- **fresh-signup test** — always use a never-before-registered address;
+- **existing-account test** — use sign-in or password-recovery/resend behavior appropriate to that account state, not signup.
+
+Do not use an existing confirmed account to test first-time signup email delivery.
 
 ---
 
@@ -256,7 +270,7 @@ After any fix, repeat a fresh production signup and require real mail delivery, 
 
 - P1-PWA-001A is COMPLETE / merged-main verified;
 - P1-PWA-001B repository migration, public CI and Vercel production path are verified;
-- ISSUE-031 confirmation email delivery remains open;
-- hosted signup/confirmation/login/Today smoke is not yet complete;
+- ISSUE-031 root cause is proven as repeated signup of an existing account; fresh-account delivery/confirmation smoke is still pending;
+- hosted fresh signup/confirmation/login/Today smoke is not yet complete;
 - physical iPhone Home Screen/install/session/interruption/network-retry tests are pending;
 - full deployed P1-E2E-001 remains pending.
