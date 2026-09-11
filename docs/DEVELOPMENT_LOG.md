@@ -148,39 +148,65 @@ Create account
 
 but the confirmation email was not received.
 
-This is not yet attributed to the public/private repository change. The application still uses Supabase Auth `signUp()` for signup email delivery; PR #45 changed the post-click verification-result UX rather than replacing the mail sender.
-
-Next diagnostic order is intentionally read-first / no speculative configuration changes:
-
-```text
-Supabase Authentication → Users
-→ Supabase Auth Logs at exact signup time
-→ inspect existing SMTP/Auth mail configuration
-→ prove root cause
-→ make the narrowest fix
-→ repeat production signup/confirm/login/Today smoke
-```
-
-P1-PWA-001B remains **OPEN** until email delivery, explicit `/verify-email` success, login and authenticated Today are verified.
+Initial diagnosis intentionally avoided speculative SMTP/configuration changes.
 
 ---
 
-## Current handoff — P1-PWA-001B email delivery diagnosis
+## 2026-09-11 — P1-PWA-001B signup diagnosis — ROOT CAUSE PROVEN
 
-Repository migration, public CI and Vercel production are now verified. The exact next slice is:
+The missing-email symptom was traced with read-only production evidence rather than changing SMTP or code.
+
+Evidence:
 
 ```text
-inspect production Supabase signup user state
-→ inspect Auth logs for the failed mail delivery
-→ inspect existing SMTP/Auth mail configuration without changing it
-→ determine root cause
-→ apply only the required fix
-→ verify a fresh signup receives confirmation email
-→ verify explicit Email verified page
+Authentication → Users
+→ only the pre-existing account was present; no new learner was created by the smoke attempt
+
+Unified Auth audit logs
+→ action = user_repeated_signup
+→ actor matched the existing account used for the test
+```
+
+Conclusion:
+
+- the test reused an already-registered address;
+- Supabase treated the operation as `user_repeated_signup`;
+- the learner-facing `signUp()` path therefore showed the generic “Check your email” state without proving a new confirmation message had been sent;
+- this incident is **not evidence of a GitHub Public migration regression, Vercel failure, or SMTP/Resend outage**.
+
+No code, Vercel, Supabase SMTP or Resend configuration change is justified from this evidence.
+
+The exact next acceptance test is now:
+
+```text
+use a never-before-registered email address
+→ Create account
+→ verify a new Users row with current Created at timestamp
+→ receive confirmation email
+→ click confirmation link
+→ explicit /verify-email success state
 → sign in
-→ authenticated Today smoke
+→ authenticated Today
+```
+
+Only if a truly fresh account is created but no email arrives should SMTP/Resend delivery diagnostics resume.
+
+---
+
+## Current handoff — P1-PWA-001B fresh-account Auth smoke
+
+Repository migration, public CI and Vercel Production are verified. The repeated-signup false alarm is diagnosed. The exact next slice is:
+
+```text
+fresh never-registered email
+→ signup
+→ new Supabase user row
+→ confirmation email delivery
+→ /verify-email success
+→ login
+→ authenticated Today
 → P1-PWA-001C physical iPhone smoke
 → P1-E2E-001 deployed vertical gate
 ```
 
-Documentation discipline is mandatory: every completed slice must update its handoff and this development log in the same work cycle; new issues/root causes/solutions must also update `docs/ISSUES_AND_SOLUTIONS.md` before the slice is marked complete.
+Documentation discipline remains mandatory: every completed slice must update its handoff and this Development Log in the same work cycle; new issues/root causes/solutions must also update `docs/ISSUES_AND_SOLUTIONS.md` before the slice is marked complete.
