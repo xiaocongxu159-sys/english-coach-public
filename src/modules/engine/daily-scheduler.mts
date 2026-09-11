@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import dailySchedulerConfig from "../../../config/daily-scheduler-v1.config.json" with { type: "json" };
 import type {
   DailyPlan,
   DailySchedulerConfig,
@@ -8,13 +8,10 @@ import type {
 } from "./planning-types.mts";
 import { getReviewConfig } from "./review-config.mts";
 
-let cachedConfig: DailySchedulerConfig | null = null;
+const DAILY_SCHEDULER_CONFIG = dailySchedulerConfig as DailySchedulerConfig;
 
 export function getDailySchedulerConfig(): DailySchedulerConfig {
-  if (cachedConfig) return cachedConfig;
-  const path = new URL("../../../config/daily-scheduler-v1.config.json", import.meta.url);
-  cachedConfig = JSON.parse(readFileSync(path, "utf8")) as DailySchedulerConfig;
-  return cachedConfig;
+  return DAILY_SCHEDULER_CONFIG;
 }
 
 function clampBudget(minutes: number): number {

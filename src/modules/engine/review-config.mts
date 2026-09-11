@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs";
+import reviewConfig from "../../../config/review-v1.config.json" with { type: "json" };
 import type { ReviewConfig } from "./review-types.mts";
 
-let cachedReviewConfig: ReviewConfig | null = null;
+const REVIEW_CONFIG = reviewConfig as ReviewConfig;
 
 export function getReviewConfig(): ReviewConfig {
-  if (cachedReviewConfig) return cachedReviewConfig;
-  const path = new URL("../../../config/review-v1.config.json", import.meta.url);
-  cachedReviewConfig = JSON.parse(readFileSync(path, "utf8")) as ReviewConfig;
-  return cachedReviewConfig;
+  return REVIEW_CONFIG;
 }
