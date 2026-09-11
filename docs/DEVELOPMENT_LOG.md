@@ -145,7 +145,7 @@ The first missing-email smoke reused an already-registered address. Supabase uni
 
 ---
 
-## 2026-09-11 — P1-PWA-001B fresh signup + mail transport — VERIFIED PORTION COMPLETE
+## 2026-09-11 — P1-PWA-001B fresh signup + confirmation — VERIFIED PORTION COMPLETE
 
 A never-before-registered address was then used for a true Production signup.
 
@@ -158,14 +158,36 @@ users_missing_profile = 0
 pilot blueprint = present + active
 Pilot nodes = 2 present + 2 active
 Review schema = present
-fresh user email_confirmed_at = NULL
+fresh user email_confirmed_at = NULL at the pre-confirmation checkpoint
 fresh user confirmation_sent_at = populated
 fresh user last_sign_in_at = NULL
 ```
 
-Resend transactional logs independently matched the signup event. The confirmation email was recorded as `delivered`, and its confirmation URL targets the production `english.ctjfyrdian.com/auth/confirm` path. Recipient address, token and message ID are intentionally omitted from project docs.
+Resend transactional logs independently matched the signup event. The confirmation email was recorded as `delivered`, and its confirmation URL targeted the production `english.ctjfyrdian.com/auth/confirm` path. Recipient address, token and message ID are intentionally omitted from project docs.
 
-Conclusion: Supabase confirmation generation, SMTP handoff and Resend/recipient-server acceptance are all verified. The learner did not initially see the message in the mailbox UI, so the remaining mail task is inbox/filtering visibility and then confirmation-click acceptance — not an SMTP transport failure.
+The learner then located the message in Gmail **Spam**, opened it, clicked the confirmation link and reached the deployed explicit success page:
+
+```text
+Email verified
+Your email address has been confirmed successfully.
+Your account is ready. Sign in to continue learning.
+```
+
+Therefore the complete hosted confirmation chain is verified:
+
+```text
+fresh signup
+→ Auth user
+→ learner profile trigger
+→ confirmation generation
+→ SMTP / Resend delivery
+→ Gmail receipt (Spam classification)
+→ /auth/confirm
+→ verifyOtp
+→ /verify-email success
+```
+
+This closes the mail-transport and confirmation-callback portion of P1-PWA-001B. Gmail spam placement remains a deliverability/reputation observation, not an SMTP failure. No SMTP configuration change is justified from this test.
 
 ---
 
@@ -190,7 +212,15 @@ old-account review_unit_count = 0
 
 Therefore this is not an old stale Daily Plan being deserialized after the migration. The failure occurs while creating/loading the first authenticated Today snapshot.
 
-Next evidence gate: reproduce once with **Retry**, then capture the matching Vercel Production runtime exception for `/`. Do not mutate production learner data before obtaining that exception.
+The newly confirmed fresh account is now the next discriminator:
+
+```text
+fresh-account sign in
+→ Today succeeds: investigate old-account-specific state
+→ Today also fails: hosted Today/runtime problem is system-wide
+```
+
+If Today fails, reproduce once with **Retry**, then capture the matching Vercel Production runtime exception for `/`. Do not mutate production learner data before obtaining that exception.
 
 ---
 
@@ -204,16 +234,17 @@ public repository + CI
 → fresh Supabase user creation
 → learner profile trigger
 → confirmation generation
-→ Resend delivery / recipient-server acceptance
+→ Resend delivery
+→ Gmail receipt
+→ production confirmation callback
+→ explicit Email verified success
 ```
 
 Still required:
 
 ```text
-find/open fresh confirmation message
-→ /verify-email success
-→ fresh-account sign in
-→ diagnose/fix authenticated Today runtime exception
+fresh-account sign in
+→ diagnose/fix authenticated Today runtime exception if reproduced
 → authenticated Today PASS
 → P1-PWA-001C physical iPhone smoke
 → P1-E2E-001 deployed vertical gate
