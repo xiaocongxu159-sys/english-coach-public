@@ -39,7 +39,7 @@ Detailed planning/resume handoff: `docs/P1_ENGINE_001C_HANDOFF.md`.
 
 Implemented authenticated server-owned Today planning and explanations. Brand-new learner receives the exact reviewed two-node Pilot at 14 minutes under the default 35-minute profile.
 
-PR #31 squash-merged as `cf099c14e097bbd3ffdc5a801d7e694db5ec333c`; main CI #158 double-green.
+PR #31 squash-merged as `cf099c14e097bbd3ff5a801d7e694db5ec333c`; main CI #158 double-green.
 
 ---
 
@@ -133,8 +133,6 @@ old private repository retained as history/archive
 
 The clean public root commit and the selected private PR #45 source state share the same Git tree, so source content was preserved while the old repository history was not published.
 
-The repository/CI/Vercel portion of P1-PWA-001B is therefore verified complete.
-
 Detailed handoff: `docs/P1_PWA_001B_HANDOFF.md`.
 
 ---
@@ -145,27 +143,11 @@ The first missing-email smoke reused an already-registered address. Supabase uni
 
 ---
 
-## 2026-09-11 — P1-PWA-001B fresh signup + confirmation — VERIFIED PORTION COMPLETE
+## 2026-09-11 — P1-PWA-001B fresh signup + confirmation — VERIFIED
 
-A never-before-registered address was then used for a true Production signup.
+A never-before-registered address was used for a real Production signup. Supabase created the Auth user and learner profile, Resend recorded the confirmation as delivered, Gmail received the message in Spam, and the learner clicked the confirmation link successfully.
 
-Read-only Supabase evidence proved:
-
-```text
-auth_users = 2
-learner_profiles = 2
-users_missing_profile = 0
-pilot blueprint = present + active
-Pilot nodes = 2 present + 2 active
-Review schema = present
-fresh user email_confirmed_at = NULL at the pre-confirmation checkpoint
-fresh user confirmation_sent_at = populated
-fresh user last_sign_in_at = NULL
-```
-
-Resend transactional logs independently matched the signup event. The confirmation email was recorded as `delivered`, and its confirmation URL targeted the production `english.ctjfyrdian.com/auth/confirm` path. Recipient address, token and message ID are intentionally omitted from project docs.
-
-The learner then located the message in Gmail **Spam**, opened it, clicked the confirmation link and reached the deployed explicit success page:
+The deployed result page showed:
 
 ```text
 Email verified
@@ -173,81 +155,118 @@ Your email address has been confirmed successfully.
 Your account is ready. Sign in to continue learning.
 ```
 
-Therefore the complete hosted confirmation chain is verified:
+Verified chain:
 
 ```text
 fresh signup
 → Auth user
-→ learner profile trigger
+→ learner profile
 → confirmation generation
 → SMTP / Resend delivery
-→ Gmail receipt (Spam classification)
+→ Gmail receipt
 → /auth/confirm
 → verifyOtp
 → /verify-email success
 ```
 
-This closes the mail-transport and confirmation-callback portion of P1-PWA-001B. Gmail spam placement remains a deliverability/reputation observation, not an SMTP failure. No SMTP configuration change is justified from this test.
+Gmail Spam placement is a deliverability/reputation observation, not an SMTP failure.
 
 ---
 
-## 2026-09-11 — Authenticated Today Production error — OPEN
+## 2026-09-11 — Authenticated Today Production runtime error — RESOLVED / VERIFIED
 
-The previously confirmed account can sign in successfully, but the root Today page immediately reaches the application error boundary (`We could not load this step.`).
-
-The sign-in timestamp updates in `auth.users`, proving Auth itself succeeded.
-
-Production database diagnostics also rule out the first data-shape hypotheses:
+Both old and fresh confirmed accounts reproduced the same Today error after successful sign-in. Vercel captured:
 
 ```text
-learner profile exists
-users_missing_profile = 0
-Pilot blueprint present + active
-2 Pilot nodes present + active
-Review lifecycle column present
-review_events table present
-old-account daily_plan_count = 0
-old-account review_unit_count = 0
+GET / → 500
+TypeError: The "path" argument must be of type string or an instance of Buffer or URL
 ```
 
-Therefore this is not an old stale Daily Plan being deserialized after the migration. The failure occurs while creating/loading the first authenticated Today snapshot.
+Supabase reads were healthy. The root cause was runtime filesystem loading of immutable scheduler/review JSON through `import.meta.url` + `readFileSync()` inside the bundled Vercel server runtime.
 
-The newly confirmed fresh account is now the next discriminator:
+The loaders were converted to static JSON imports. After CI, merge and Production deploy, the fresh account loaded the real Today page successfully with the expected Phase 1 Pilot plan:
 
 ```text
-fresh-account sign in
-→ Today succeeds: investigate old-account-specific state
-→ Today also fails: hosted Today/runtime problem is system-wide
+35 min profile budget
+14 min reviewed work
+2 new nodes
+0 reviews ready now
+0 reviews upcoming
 ```
 
-If Today fails, reproduce once with **Retry**, then capture the matching Vercel Production runtime exception for `/`. Do not mutate production learner data before obtaining that exception.
+ISSUE-032 is resolved.
 
 ---
 
-## Current handoff — P1-PWA-001B
+## 2026-09-11 — Production Lesson submission runtime error — RESOLVED / VERIFIED
 
-Verified:
+After Today was fixed, the hosted reviewed Lesson started successfully. During Lesson progression, a later server-action POST failed:
 
 ```text
-public repository + CI
+POST /lesson/<lesson-instance-id> → 500
+TypeError: The "path" argument must be of type string or an instance of Buffer or URL
+```
+
+The remaining runtime filesystem loader was `getMasteryConfig()` for `mastery-v1.config.json`, reached through deterministic exercise submission and Mastery/Review processing.
+
+It was converted to a static JSON import. PR #6 passed `validate`, `database-integration` and Vercel Preview, then squash-merged as:
+
+```text
+557acfb43944490f991fb1f723299cce70e4e8d8
+```
+
+Merged-main `validate`, `database-integration` and Vercel Production also passed.
+
+The learner then resumed the same Production Lesson and completed it end to end:
+
+```text
+8/8 stages
+Lesson complete
+Exit check: 9/10 · more practice needed
+```
+
+No account reset, lesson reset or Production state rewrite was needed. The persisted Lesson resumed after deployment and progressed beyond the previously failing action.
+
+ISSUE-033 is resolved.
+
+Detailed handoff: `docs/P1_PWA_001B_LESSON_RUNTIME_FIX_HANDOFF.md`.
+
+---
+
+## 2026-09-11 — P1-PWA-001B hosted Production smoke — COMPLETE / PRODUCTION VERIFIED
+
+The real hosted desktop/browser chain is now verified:
+
+```text
+public GitHub repo
+→ public CI
 → Vercel Production
-→ fresh Supabase user creation
-→ learner profile trigger
-→ confirmation generation
-→ Resend delivery
-→ Gmail receipt
-→ production confirmation callback
-→ explicit Email verified success
+→ fresh signup
+→ confirmation email
+→ Email verified
+→ sign in
+→ Today
+→ Start Lesson
+→ resume after interruption/runtime fix
+→ deterministic exercises
+→ Exit Check
+→ 8/8 Lesson complete
 ```
 
-Still required:
+Therefore **P1-PWA-001B is COMPLETE / PRODUCTION VERIFIED**.
+
+Next gate:
 
 ```text
-fresh-account sign in
-→ diagnose/fix authenticated Today runtime exception if reproduced
-→ authenticated Today PASS
-→ P1-PWA-001C physical iPhone smoke
-→ P1-E2E-001 deployed vertical gate
+P1-PWA-001C physical iPhone validation
+→ Add to Home Screen
+→ standalone launch
+→ auth/session persistence
+→ responsive/touch Today/Lesson/Review
+→ interruption/reopen
+→ real network interruption + Retry
+→ authoritative persisted-state resume
+→ deployed P1-E2E-001
 ```
 
 Documentation discipline remains mandatory: every completed slice must update its handoff and this Development Log in the same work cycle; new issues/root causes/solutions must also update `docs/ISSUES_AND_SOLUTIONS.md` before the slice is marked complete.
