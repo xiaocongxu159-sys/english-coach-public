@@ -40,6 +40,42 @@ function fail(error: { message: string } | null, context: string): void {
   if (error) throw new Error(`${context}: ${error.message}`);
 }
 
+async function reconcileCompletedPhase1Plan(
+  client: SupabaseClient,
+  store: SupabaseDailyPlanStore,
+  learnerId: string,
+  storedPlan: StoredDailyPlan,
+): Promise<StoredDailyPlan> {
+  if (storedPlan.status !== "in_progress") return storedPlan;
+
+  // P1 has exactly one reviewed two-node Lesson Request. A completed Lesson is
+  // therefore sufficient to close that day's frozen plan. Future multi-request
+  // plan completion must define its own aggregate completion rule.
+  if (
+    storedPlan.plan.lesson_requests.length !== 1 ||
+    !isExactPhase1PilotNodeSet(storedPlan.plan.selected.new_node_ids)
+  ) {
+    return storedPlan;
+  }
+
+  const resolutionKey = `${storedPlan.plan.id}:request:0`;
+  const lessonResult = await client
+    .from("lesson_instances")
+    .select("status,completed_at")
+    .eq("user_id", learnerId)
+    .eq("resolution_key", resolutionKey)
+    .neq("status", "abandoned")
+    .maybeSingle();
+  fail(lessonResult.error, "Today reconcile completed Pilot lesson");
+  if (lessonResult.data?.status !== "completed") return storedPlan;
+
+  return store.completeDailyPlan(
+    learnerId,
+    storedPlan.id,
+    lessonResult.data.completed_at ?? new Date().toISOString(),
+  );
+}
+
 async function buildTodaySnapshot(input: {
   client: SupabaseClient;
   learnerId: string;
@@ -109,6 +145,12 @@ export async function getOrCreateTodaySnapshot(
     existingPlan &&
     (existingPlan.status === "in_progress" || existingPlan.status === "completed")
   ) {
+    const reconciledPlan = await reconcileCompletedPhase1Plan(
+      client,
+      planStore,
+      learnerId,
+      existingPlan,
+    );
     return buildTodaySnapshot({
       client,
       learnerId,
@@ -116,7 +158,7 @@ export async function getOrCreateTodaySnapshot(
       timezone: profile.timezone,
       planDate,
       lessonTitle,
-      storedPlan: existingPlan,
+      storedPlan: reconciledPlan,
       now,
     });
   }
