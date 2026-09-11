@@ -14,6 +14,11 @@ export interface StoredDailyPlan {
 export interface DailyPlanStore {
   getDailyPlan(userId: string, planDate: string): Promise<StoredDailyPlan | null>;
   upsertDailyPlan(plan: DailyPlan): Promise<StoredDailyPlan>;
+  completeDailyPlan(
+    userId: string,
+    planId: string,
+    completedAt?: string,
+  ): Promise<StoredDailyPlan>;
 }
 
 function fail(error: { message: string; code?: string } | null, context: string): void {
@@ -101,8 +106,45 @@ export class SupabaseDailyPlanStore implements DailyPlanStore {
     if (!insert.data) throw new Error("create daily plan: database returned no row");
     return mapRow(insert.data);
   }
+
+  async completeDailyPlan(
+    userId: string,
+    planId: string,
+    completedAt = new Date().toISOString(),
+  ): Promise<StoredDailyPlan> {
+    const update = await this.client
+      .from("daily_plans")
+      .update({ status: "completed", updated_at: completedAt })
+      .eq("id", planId)
+      .eq("user_id", userId)
+      .eq("status", "in_progress")
+      .select(DAILY_PLAN_SELECT)
+      .maybeSingle();
+    fail(update.error, "complete daily plan");
+    if (update.data) return mapRow(update.data);
+
+    const existing = await this.client
+      .from("daily_plans")
+      .select(DAILY_PLAN_SELECT)
+      .eq("id", planId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    fail(existing.error, "read daily plan after completion race");
+    if (!existing.data) {
+      throw new Error("complete daily plan: referenced plan was not found");
+    }
+
+    const mapped = mapRow(existing.data);
+    if (mapped.status === "completed") return mapped;
+    throw new Error(
+      `complete daily plan: expected in_progress or completed, received ${mapped.status}`,
+    );
+  }
 }
 
-export async function persistDailyPlan(store: DailyPlanStore, plan: DailyPlan): Promise<StoredDailyPlan> {
+export async function persistDailyPlan(
+  store: DailyPlanStore,
+  plan: DailyPlan,
+): Promise<StoredDailyPlan> {
   return store.upsertDailyPlan(plan);
 }
