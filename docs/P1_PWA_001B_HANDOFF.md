@@ -3,7 +3,7 @@
 **Date:** 2026-09-11  
 **Parent module:** P1-PWA-001 — hosted/reachable deployment + physical iPhone PWA validation  
 **Slice:** P1-PWA-001B — hosted environment, public-repository migration and production deployment  
-**Status:** PARTIALLY COMPLETE — repository/CI/Vercel migration verified; repeated-signup false alarm diagnosed; fresh-account confirmation smoke pending  
+**Status:** PARTIALLY COMPLETE — repository/CI/Vercel migration verified; fresh signup + confirmation email + explicit verification result PASS; fresh-account sign-in/Today still pending and authenticated Today runtime error remains open  
 **Canonical repository:** `xiaocongxu159-sys/english-coach-public`  
 **Production branch:** `main`  
 **Initial clean public snapshot:** `30fb6b5298f14654325ec7f0cefe93e163d451cf`  
@@ -13,7 +13,7 @@
 
 ## 1. Repository migration decision
 
-The original `xiaocongxu159-sys/english-coach` repository remains private because historical Git metadata contains a personal commit email. Directly changing that repository to Public would have exposed old commit/branch/PR history.
+The original `xiaocongxu159-sys/english-coach` repository remains private because historical Git metadata contains a personal commit email. Directly changing that repository's visibility to Public would expose old commit/branch/PR history.
 
 Migration used a clean snapshot:
 
@@ -156,80 +156,134 @@ The application still owns confirmation verification/result handling:
 → /verify-email?status=success|error
 ```
 
-## 7. Signup-email diagnosis — root cause proven
+## 7. Repeated-signup false alarm — diagnosed
 
-Initial Production smoke showed:
-
-```text
-Create account
-→ “Check your email to confirm your account.”
-→ no confirmation email received
-```
-
-The first hypothesis space included SMTP/provider failure, rate limiting, duplicate-user behavior and environment mismatch. No configuration was changed before collecting evidence.
-
-Read-only production evidence then showed:
-
-### Users evidence
-
-`Authentication → Users` contained only the already-existing account. The attempted smoke test did not create a new learner row.
-
-### Audit-log evidence
-
-Unified Auth audit logs contained:
+The first hosted smoke reused an already-registered account. Unified Auth audit logs recorded:
 
 ```text
 action = user_repeated_signup
 ```
 
-The actor matched the same already-existing account used for the smoke test.
+That explained why the page showed the generic confirmation message without creating a new learner. No SMTP/Vercel/code change was justified from that attempt.
+
+## 8. Fresh-account signup + confirmation — PASS
+
+A second smoke used a never-before-registered address.
+
+Read-only production evidence showed:
+
+```text
+auth_users = 2
+learner_profiles = 2
+users_missing_profile = 0
+pilot_blueprint_rows = 1
+pilot_blueprint_active = 1
+pilot_node_rows = 2
+pilot_nodes_active = 2
+review_units_lifecycle_column = 1
+review_events_table = 1
+```
+
+For the fresh account at the pre-confirmation checkpoint:
+
+- `created_at` was current;
+- `email_confirmed_at` was null;
+- `confirmation_sent_at` was populated at signup time;
+- `last_sign_in_at` was null;
+- `daily_plan_count = 0`.
+
+Resend delivery logs independently matched the signup event within about one second. The transactional email status was `delivered`, with the expected subject and sender identity, and the confirmation link targeted the production `english.ctjfyrdian.com/auth/confirm` path. Token values and recipient addresses are intentionally omitted from this public document.
+
+The learner then located the message in Gmail **Spam**, opened it, clicked the confirmation link, and reached the deployed explicit result screen:
+
+```text
+Email verified
+Your email address has been confirmed successfully.
+Your account is ready. Sign in to continue learning.
+```
 
 ### Conclusion
 
-The missing-email symptom was caused by **reusing an email address that was already registered**, not by the GitHub Public migration, Vercel, or proven SMTP/Resend failure.
-
-Supabase intentionally does not expose a simple “this account already exists” signal in the normal signup response, so the application-level `signUp()` path can still reach the generic learner-facing confirmation message during a repeated signup attempt.
-
-No SMTP, Resend, Vercel or application-code change is justified from this incident.
-
-## 8. Exact next diagnostic/acceptance step
-
-The next Production Auth smoke must use a **never-before-registered email address**.
-
-Required evidence sequence:
+The following hosted chain is now verified end to end:
 
 ```text
-fresh email
-→ Create account
-→ new Authentication → Users row with current Created at timestamp
-→ confirmation email arrives
-→ open confirmation link
-→ /verify-email shows explicit Email verified success state
-→ sign in
-→ authenticated Today
+fresh signup
+→ auth user created
+→ learner profile created
+→ confirmation generated
+→ Supabase SMTP handoff
+→ Resend delivered
+→ Gmail received (classified as Spam)
+→ production /auth/confirm
+→ verifyOtp()
+→ explicit /verify-email success screen
 ```
 
-Only if a truly fresh user is created but the email still fails to arrive should SMTP/Resend delivery diagnostics resume.
+The email-transport/callback portion of P1-PWA-001B is therefore **PASS**. Gmail spam classification is a deliverability/reputation concern, not a transport failure. Marking the message as “Not spam” is appropriate for this test mailbox; no SMTP reconfiguration is justified by this event.
 
-Do not delete or repurpose an existing learner account merely to simulate first-time signup unless there is a separate data-retention decision.
+## 9. Authenticated Today blocker — separate issue
 
-## 9. Remaining 001B acceptance
+The pre-existing confirmed account can sign in successfully. After sign-in, loading `/` reaches the root error boundary and displays:
+
+```text
+Connection problem
+We could not load this step.
+```
+
+This proves Auth login succeeds; the failure occurs while loading the authenticated Today snapshot.
+
+Read-only production diagnostics rule out several earlier hypotheses:
+
+- learner profile exists;
+- `users_missing_profile = 0`;
+- exact Pilot blueprint exists and is active;
+- both Pilot nodes exist and are active;
+- current Review schema exists;
+- the old account has `daily_plan_count = 0`, so the failure is **not** caused by loading a stale historical Daily Plan;
+- the account has no existing Review Units in the observed result.
+
+The next high-value discriminator is the newly confirmed fresh account:
+
+```text
+fresh account sign in
+→ if Today also fails: system-wide hosted Today/runtime problem
+→ if Today succeeds: old-account-specific state problem
+```
+
+If Today fails, capture the corresponding Vercel Production runtime exception before changing code or production data.
+
+## 10. Remaining 001B acceptance
 
 ```text
 Production HTTPS reachable                 PASS
 Public repository CI                       PASS
 Vercel Production from public main         PASS
-Repeated-signup root cause                 PASS / diagnosed
-Fresh new learner signup                   PENDING
-Confirmation email actually delivered      PENDING
-/verify-email explicit success state       PENDING
-Learner sign-in                            PENDING
-Authenticated Today                        PENDING
+Repeated-signup false alarm                PASS / diagnosed
+Fresh new learner signup                   PASS
+New learner profile trigger                PASS
+Confirmation message generated             PASS
+Supabase → Resend handoff                   PASS
+Recipient mail-server acceptance           PASS
+Gmail message located                      PASS — Spam classification observed
+/auth/confirm callback                      PASS
+/verify-email explicit success state       PASS
+Fresh-account sign-in                       PENDING
+Authenticated Today                        BLOCKED/PENDING — runtime issue under diagnosis
 ```
 
-P1-PWA-001B must not be marked COMPLETE until the fresh-account Auth smoke passes end to end.
+P1-PWA-001B must not be marked COMPLETE until the fresh-account sign-in and authenticated Today smoke pass.
 
-## 10. Next slice
+## 11. Exact next diagnostics
+
+1. On the `Email verified` page choose **Continue to sign in**.
+2. Sign in with the newly confirmed fresh account.
+3. Observe whether authenticated Today loads.
+4. If Today succeeds, record that result and then investigate why only the historical account failed.
+5. If Today reaches the same root error boundary, click **Retry** once and capture the matching Vercel Production runtime exception for `/`.
+
+Only after the runtime exception is known should a code or data fix be proposed.
+
+## 12. Next slice
 
 After 001B hosted desktop smoke passes, proceed to **P1-PWA-001C physical iPhone validation**:
 
@@ -244,7 +298,7 @@ After 001B hosted desktop smoke passes, proceed to **P1-PWA-001C physical iPhone
 
 Then execute deployed **P1-E2E-001** before Phase 2.
 
-## 11. Documentation discipline — mandatory
+## 13. Documentation discipline — mandatory
 
 A slice is not formally complete until documentation and verification agree.
 
