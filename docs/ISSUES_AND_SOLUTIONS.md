@@ -36,7 +36,8 @@ This is the active project issue ledger. Full pre-P1-UI historical issue prose i
 | ISSUE-028 | Directly publicizing the historical private repository would expose old metadata/history | Resolved with clean-snapshot public repository |
 | ISSUE-029 | PowerShell instructions were accidentally executed in Ubuntu Bash | Resolved; accidental `/home/ubuntu/.git` removed before any push |
 | ISSUE-030 | First migration secret scan produced broad false positives | Resolved with boundary-aware precise scanner |
-| ISSUE-031 | Production signup appeared to succeed but no confirmation email arrived | Root cause proven: repeated signup of existing account; fresh-account smoke still pending |
+| ISSUE-031 | Production signup appeared to succeed but no confirmation email arrived | Repeated-signup false alarm resolved; fresh mail transport verified delivered; inbox/confirmation click pending |
+| ISSUE-032 | Confirmed user can sign in but authenticated Today route reaches root error boundary | Open — runtime exception not yet captured |
 
 Detailed Engine/UI/PWA context remains in:
 
@@ -205,9 +206,9 @@ The precise scan returned `PRECISE_SECRET_SCAN_OK` before the clean root commit 
 
 **Date diagnosed:** 2026-09-11  
 **Module:** P1-PWA-001B / hosted Supabase Auth signup smoke  
-**Status:** Root cause proven; fresh-account acceptance test still pending
+**Status:** Repeated-signup false alarm resolved; fresh mail transport verified delivered; inbox/confirmation click pending
 
-### Observed behavior
+### First observed behavior
 
 The Production signup form returned:
 
@@ -215,54 +216,93 @@ The Production signup form returned:
 Check your email to confirm your account.
 ```
 
-but no new confirmation email arrived.
+but no confirmation email was visible.
 
-### Evidence
+### First root cause
 
-Read-only production diagnostics showed:
-
-1. `Authentication → Users` contained only the pre-existing account; no new user was created by the test attempt.
-2. Unified Supabase Auth audit logs for the attempted signup contained:
+The initial smoke reused an already-registered email. Unified Supabase Auth audit logs showed:
 
 ```text
 action = user_repeated_signup
 ```
 
-3. The audit event actor matched the already-existing account used for the test.
+That attempt did not create a new user and therefore was not a valid first-signup delivery test.
 
-### Root cause
+### Fresh-account evidence
 
-The smoke test reused an email address that was already registered. Supabase intentionally treats repeated signup in a way that avoids revealing whether an account exists. The application-level `signUp()` call therefore did not surface a normal “already registered” error to the learner-facing UI, and the page continued to show the generic confirmation-email message.
+A never-before-registered address was then used.
 
-This was **not evidence of a Public GitHub repository regression**, Vercel deployment failure, or SMTP outage.
+Production SQL showed:
 
-### Resolution / next acceptance test
+- second Auth user created;
+- second learner profile created automatically;
+- `users_missing_profile = 0`;
+- fresh user's `confirmation_sent_at` populated;
+- fresh user's `email_confirmed_at` remained null;
+- fresh user's `last_sign_in_at` remained null.
 
-No SMTP, Resend, Vercel or application-code change is justified from this incident.
+Resend logs independently showed a matching confirmation transaction with status `delivered`. The confirmation URL targets the production `/auth/confirm` route. Recipient address, message ID and token are omitted from this public document.
 
-The next test must use an email address that has never been registered in this Supabase project:
+### Current conclusion
+
+The Auth mail transport is healthy for the fresh test:
 
 ```text
-fresh email
-→ Create account
-→ new user appears with current Created at timestamp
-→ confirmation email arrives
-→ open confirmation link
-→ explicit /verify-email success state
-→ sign in
-→ authenticated Today
+Supabase generates confirmation
+→ SMTP handoff
+→ Resend accepts/sends
+→ recipient mail server accepts (delivered)
 ```
 
-Only if that fresh-account test creates a new unconfirmed user but the email still fails to arrive should SMTP/Resend delivery diagnostics resume.
+The message was not initially visible in the mailbox UI, so the remaining task is inbox/filtering discovery and then confirmation-link acceptance. This is not evidence of an SMTP outage.
 
-### Prevention
+### Current action
 
-Production Auth smoke procedures must distinguish:
+Search the mailbox by sender/subject and check Spam, All Mail and Promotions. Do not change SMTP while transport is already proven delivered.
 
-- **fresh-signup test** — always use a never-before-registered address;
-- **existing-account test** — use sign-in or password-recovery/resend behavior appropriate to that account state, not signup.
+---
 
-Do not use an existing confirmed account to test first-time signup email delivery.
+## ISSUE-032 — Confirmed user signs in but Today route reaches root error boundary
+
+**Date opened:** 2026-09-11  
+**Module:** P1-PWA-001B / hosted authenticated Today smoke  
+**Status:** Open — runtime exception not yet captured
+
+### Observed behavior
+
+A previously confirmed account can authenticate successfully. Immediately after sign-in, `/` renders the root error boundary:
+
+```text
+Connection problem
+We could not load this step.
+```
+
+The user's `last_sign_in_at` updates, proving the failure is after Auth sign-in.
+
+### Evidence collected
+
+Read-only production checks prove:
+
+- Auth user exists and is confirmed;
+- learner profile exists;
+- no user is missing a learner profile;
+- Phase 1 Pilot blueprint exists and is active;
+- both exact Pilot nodes exist and are active;
+- upgraded Review schema exists;
+- old account `daily_plan_count = 0`;
+- old account `review_unit_count = 0` in the observed result.
+
+### Ruled-out hypothesis
+
+The failure is **not** caused by deserializing a stale pre-migration Daily Plan, because no Daily Plan exists for the affected account.
+
+### Next evidence gate
+
+Do not mutate production rows yet.
+
+Reproduce once by pressing **Retry**, then immediately inspect Vercel Production runtime logs for the matching `/` request and capture the actual server exception/stack. The digest shown to the learner is insufficient by itself to choose a safe fix.
+
+Only after the runtime exception is known should a code or data change be proposed.
 
 ---
 
@@ -270,7 +310,9 @@ Do not use an existing confirmed account to test first-time signup email deliver
 
 - P1-PWA-001A is COMPLETE / merged-main verified;
 - P1-PWA-001B repository migration, public CI and Vercel production path are verified;
-- ISSUE-031 root cause is proven as repeated signup of an existing account; fresh-account delivery/confirmation smoke is still pending;
-- hosted fresh signup/confirmation/login/Today smoke is not yet complete;
+- repeated-signup false alarm is resolved;
+- fresh Supabase signup + learner-profile creation is verified;
+- confirmation email transport is verified through Resend `delivered`, but inbox discovery/confirmation click remains pending;
+- ISSUE-032 authenticated Today runtime error is open;
 - physical iPhone Home Screen/install/session/interruption/network-retry tests are pending;
 - full deployed P1-E2E-001 remains pending.
