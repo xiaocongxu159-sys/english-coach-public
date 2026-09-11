@@ -36,7 +36,7 @@ This is the active project issue ledger. Full pre-P1-UI historical issue prose i
 | ISSUE-028 | Directly publicizing the historical private repository would expose old metadata/history | Resolved with clean-snapshot public repository |
 | ISSUE-029 | PowerShell instructions were accidentally executed in Ubuntu Bash | Resolved; accidental `/home/ubuntu/.git` removed before any push |
 | ISSUE-030 | First migration secret scan produced broad false positives | Resolved with boundary-aware precise scanner |
-| ISSUE-031 | Production signup appeared to succeed but no confirmation email arrived | Repeated-signup false alarm resolved; fresh mail transport verified delivered; inbox/confirmation click pending |
+| ISSUE-031 | Production signup appeared to succeed but no confirmation email arrived | Resolved — repeated-signup false alarm separated; fresh signup/delivery/callback verified, Gmail Spam placement observed |
 | ISSUE-032 | Confirmed user can sign in but authenticated Today route reaches root error boundary | Open — runtime exception not yet captured |
 
 Detailed Engine/UI/PWA context remains in:
@@ -204,9 +204,9 @@ The precise scan returned `PRECISE_SECRET_SCAN_OK` before the clean root commit 
 
 ## ISSUE-031 — Production signup appeared successful but no confirmation email arrived
 
-**Date diagnosed:** 2026-09-11  
+**Date closed:** 2026-09-11  
 **Module:** P1-PWA-001B / hosted Supabase Auth signup smoke  
-**Status:** Repeated-signup false alarm resolved; fresh mail transport verified delivered; inbox/confirmation click pending
+**Status:** Resolved
 
 ### First observed behavior
 
@@ -238,27 +238,54 @@ Production SQL showed:
 - second learner profile created automatically;
 - `users_missing_profile = 0`;
 - fresh user's `confirmation_sent_at` populated;
-- fresh user's `email_confirmed_at` remained null;
-- fresh user's `last_sign_in_at` remained null.
+- fresh user's `email_confirmed_at` was null at the pre-confirmation checkpoint;
+- fresh user's `last_sign_in_at` was null at that checkpoint.
 
-Resend logs independently showed a matching confirmation transaction with status `delivered`. The confirmation URL targets the production `/auth/confirm` route. Recipient address, message ID and token are omitted from this public document.
+Resend logs independently showed a matching confirmation transaction with status `delivered`. The confirmation URL targeted the production `/auth/confirm` route. Recipient address, message ID and token are omitted from this public document.
 
-### Current conclusion
+### Final resolution / verification
 
-The Auth mail transport is healthy for the fresh test:
+The learner located the message in Gmail **Spam**, opened it, clicked **Confirm email address**, and reached the deployed explicit success screen:
 
 ```text
-Supabase generates confirmation
-→ SMTP handoff
-→ Resend accepts/sends
-→ recipient mail server accepts (delivered)
+Email verified
+Your email address has been confirmed successfully.
+Your account is ready. Sign in to continue learning.
 ```
 
-The message was not initially visible in the mailbox UI, so the remaining task is inbox/filtering discovery and then confirmation-link acceptance. This is not evidence of an SMTP outage.
+Therefore the hosted confirmation chain is verified:
 
-### Current action
+```text
+fresh signup
+→ Auth user + learner profile
+→ confirmation generation
+→ SMTP / Resend delivered
+→ Gmail receipt
+→ /auth/confirm
+→ verifyOtp
+→ /verify-email success
+```
 
-Search the mailbox by sender/subject and check Spam, All Mail and Promotions. Do not change SMTP while transport is already proven delivered.
+The original “missing mail” symptom had two distinct causes across the two tests:
+
+1. the first attempt was not a fresh signup at all (`user_repeated_signup`);
+2. the true fresh confirmation message was received but Gmail classified it as Spam.
+
+Neither result supports changing SMTP configuration. Gmail spam placement is a deliverability/reputation observation; marking the test message as “Not spam” is appropriate for the mailbox used in acceptance testing.
+
+### Prevention
+
+Production Auth smoke must distinguish fresh signup from existing-account behavior, and delivery diagnosis must separate:
+
+```text
+message generated
+→ provider accepted
+→ recipient server accepted
+→ mailbox folder/classification
+→ confirmation callback result
+```
+
+Do not label the SMTP path broken until the provider/recipient-server stage actually fails.
 
 ---
 
@@ -298,9 +325,17 @@ The failure is **not** caused by deserializing a stale pre-migration Daily Plan,
 
 ### Next evidence gate
 
-Do not mutate production rows yet.
+Use the newly confirmed fresh account as the next discriminator:
 
-Reproduce once by pressing **Retry**, then immediately inspect Vercel Production runtime logs for the matching `/` request and capture the actual server exception/stack. The digest shown to the learner is insufficient by itself to choose a safe fix.
+```text
+fresh account Today succeeds
+→ investigate old-account-specific state
+
+fresh account Today also fails
+→ hosted Today/runtime problem is system-wide
+```
+
+If the fresh account also fails, reproduce once with **Retry**, then inspect Vercel Production runtime logs for the matching `/` request and capture the actual server exception/stack. Do not mutate production rows before that evidence exists.
 
 Only after the runtime exception is known should a code or data change be proposed.
 
@@ -310,9 +345,9 @@ Only after the runtime exception is known should a code or data change be propos
 
 - P1-PWA-001A is COMPLETE / merged-main verified;
 - P1-PWA-001B repository migration, public CI and Vercel production path are verified;
-- repeated-signup false alarm is resolved;
-- fresh Supabase signup + learner-profile creation is verified;
-- confirmation email transport is verified through Resend `delivered`, but inbox discovery/confirmation click remains pending;
+- ISSUE-031 signup/confirmation chain is resolved and verified through the explicit `Email verified` screen;
+- Gmail classified the fresh confirmation message as Spam; this is a deliverability/reputation observation, not a transport failure;
 - ISSUE-032 authenticated Today runtime error is open;
+- fresh-account sign-in/Today smoke is the immediate next discriminator;
 - physical iPhone Home Screen/install/session/interruption/network-retry tests are pending;
 - full deployed P1-E2E-001 remains pending.
