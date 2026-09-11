@@ -1,15 +1,16 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { ExerciseResponse } from "../src/modules/engine/types.mts";
 import { evaluateAndCheckpointExitGate } from "../src/modules/ui/lesson-exit-service.mts";
 import { submitCurrentDeterministicExercise } from "../src/modules/ui/lesson-exercise-service.mts";
-import { skipSpeakingRehearsal } from "../src/modules/ui/lesson-speaking-service.mts";
-import { completeLessonSummary } from "../src/modules/ui/lesson-summary-service.mts";
 import {
   advanceCurrentInstructionStage,
   startOrResumeTodayLesson,
 } from "../src/modules/ui/lesson-service.mts";
-import type { ExerciseResponse } from "../src/modules/engine/types.mts";
+import { skipSpeakingRehearsal } from "../src/modules/ui/lesson-speaking-service.mts";
+import { completeLessonSummary } from "../src/modules/ui/lesson-summary-service.mts";
+import { getOrCreateTodaySnapshot } from "../src/modules/ui/today-service.mts";
 
 const url = process.env.SUPABASE_TEST_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey =
@@ -101,6 +102,15 @@ async function driveToExit(
   return lessonId;
 }
 
+async function loadPlanStatus(learnerId: string) {
+  return admin
+    .from("daily_plans")
+    .select("id,status")
+    .eq("user_id", learnerId)
+    .eq("plan_date", "2026-09-02")
+    .single();
+}
+
 const cleanupIds: string[] = [];
 try {
   const passLearner = await createLearner("pass");
@@ -149,12 +159,34 @@ try {
   );
   assert.equal(passCompleted.lesson.status, "completed");
   assert.equal(passCompleted.currentStageId, null);
+
+  const passPlan = await loadPlanStatus(passLearner.userId);
+  assert.equal(passPlan.error, null, passPlan.error?.message);
+  assert.equal(passPlan.data.status, "completed");
+
   const passCompletionReplay = await completeLessonSummary(
     admin,
     passLearner.userId,
     passLessonId,
   );
   assert.equal(passCompletionReplay.lesson.status, "completed");
+
+  // Repair the exact stale state observed in Production before this fix:
+  // Lesson completed, but Daily Plan incorrectly remained in_progress.
+  const stalePlan = await admin
+    .from("daily_plans")
+    .update({ status: "in_progress" })
+    .eq("id", passPlan.data.id);
+  assert.equal(stalePlan.error, null, stalePlan.error?.message);
+  const reconciledToday = await getOrCreateTodaySnapshot(
+    admin,
+    passLearner.userId,
+    new Date("2026-09-02T06:30:00.000Z"),
+  );
+  assert.equal(reconciledToday.storedPlan.status, "completed");
+  const repairedPlan = await loadPlanStatus(passLearner.userId);
+  assert.equal(repairedPlan.error, null, repairedPlan.error?.message);
+  assert.equal(repairedPlan.data.status, "completed");
 
   const failLearner = await createLearner("required-fail");
   cleanupIds.push(failLearner.userId);
@@ -182,6 +214,9 @@ try {
   );
   assert.equal(failedCompleted.lesson.status, "completed");
   assert.equal(failedCompleted.currentStageId, null);
+  const failedPlan = await loadPlanStatus(failLearner.userId);
+  assert.equal(failedPlan.error, null, failedPlan.error?.message);
+  assert.equal(failedPlan.data.status, "completed");
 
   const failStates = await admin
     .from("learner_node_state")
@@ -219,7 +254,7 @@ try {
   assert.notEqual(forged.error, null);
 
   console.log(
-    "Lesson exit UI DB integration passed: the reviewed Pilot gate is derived only from persisted trusted deterministic Attempts, 10/10 passes, 9/10 still fails when a required controlled-production item is wrong, both outcomes can finish the Lesson only after the persisted exit result exists, completion does not declare mastery, retries are idempotent, and learner RLS cannot forge the gate result.",
+    "Lesson exit UI DB integration passed: trusted Exit Check outcomes finish the reviewed Pilot Lesson without declaring mastery, finishing the single-request P1 Lesson also completes its Daily Plan, stale completed-Lesson/in-progress-plan state is repaired on Today, completion retries are idempotent, and learner RLS cannot forge the gate result.",
   );
 } finally {
   for (const userId of cleanupIds) {
