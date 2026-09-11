@@ -1,21 +1,21 @@
 # P1-PWA-001B Handoff
 
-**Date:** 2026-09-10  
+**Date:** 2026-09-11  
 **Parent module:** P1-PWA-001 — hosted/reachable deployment + physical iPhone PWA validation  
 **Slice:** P1-PWA-001B — hosted environment, public-repository migration and production deployment  
-**Status:** PARTIALLY COMPLETE — repository/CI/Vercel migration verified; hosted email-confirmation smoke BLOCKED  
+**Status:** PARTIALLY COMPLETE — repository/CI/Vercel migration verified; repeated-signup false alarm diagnosed; fresh-account confirmation smoke pending  
 **Canonical repository:** `xiaocongxu159-sys/english-coach-public`  
 **Production branch:** `main`  
 **Initial clean public snapshot:** `30fb6b5298f14654325ec7f0cefe93e163d451cf`  
 **Production trigger commit:** `d65900bf7873f8d8ac38a1dbb617dd82ffe5fdca`  
-**Documentation release:** PR #1 squash-merged as `7642800b54939d203c83ab80352ec3f063f9ba3a`  
-**Merged-main CI:** run `34482865644` — `validate` PASS + `database-integration` PASS
+**Documentation sync release:** PR #2 squash-merged as `df252d39a24055195e802e9d7be41e34096155d8`  
+**Merged-main CI:** run `34484320527` — `validate` PASS + `database-integration` PASS
 
 ## 1. Repository migration decision
 
 The original `xiaocongxu159-sys/english-coach` repository remains private because historical Git metadata contains a personal commit email. Directly changing that repository to Public would have exposed old commit/branch/PR history.
 
-Migration therefore used:
+Migration used a clean snapshot:
 
 ```text
 old private repository retained
@@ -69,43 +69,33 @@ No secret values are recorded here.
 
 ## 4. Public CI verification
 
-Initial public CI run:
-
-```text
-34459279725
-```
-
-Result:
+Initial public CI run `34459279725` passed:
 
 ```text
 validate              PASS
 database-integration  PASS
 ```
 
-The documentation handoff release was then merged through Public PR #1:
+Documentation PR #1 squash-merged as `7642800b54939d203c83ab80352ec3f063f9ba3a`, followed by merged-main run `34482865644`, also double-green.
+
+Canonical-handoff sync PR #2 squash-merged as:
 
 ```text
-7642800b54939d203c83ab80352ec3f063f9ba3a
+df252d39a24055195e802e9d7be41e34096155d8
 ```
 
-Merged-main CI run:
-
-```text
-34482865644
-```
-
-Result:
+Merged-main CI run `34484320527` also passed:
 
 ```text
 validate              PASS
 database-integration  PASS
 ```
 
-Therefore the Public repository and documentation baseline are merged-main verified.
+Therefore the Public repository and current documentation baseline are merged-main verified.
 
 ## 5. Vercel Git migration
 
-The existing Vercel project `english-coach` was preserved. Domains/project configuration were not intentionally recreated.
+The existing Vercel project `english-coach` was preserved.
 
 Sequence:
 
@@ -128,7 +118,7 @@ SUPABASE_SERVICE_ROLE_KEY
 
 Values remain secret and are not stored in Git documentation.
 
-Because the initial public snapshot predated the new Vercel Git connection, a no-code-change commit was created to trigger Production:
+A no-code-change commit triggered the first deployment after reconnecting Git:
 
 ```text
 d65900bf7873f8d8ac38a1dbb617dd82ffe5fdca
@@ -156,12 +146,7 @@ That was true at the 001A release commit, but it was later intentionally superse
 fix: make Supabase Site URL the confirmation source of truth
 ```
 
-PR #44 removed `emailRedirectTo` from both:
-
-- `supabase.auth.signUp(...)`
-- `supabase.auth.resend(...)`
-
-Current production confirmation destination therefore depends on hosted Supabase Auth Site URL and the confirmation-email template. This is intentional current code, not an accidental omission from the public migration.
+PR #44 removed `emailRedirectTo` from both signup and resend. Current production confirmation destination therefore depends on hosted Supabase Auth Site URL and the confirmation-email template.
 
 The application still owns confirmation verification/result handling:
 
@@ -171,11 +156,9 @@ The application still owns confirmation verification/result handling:
 → /verify-email?status=success|error
 ```
 
-## 7. Hosted signup/email smoke — current blocker
+## 7. Signup-email diagnosis — root cause proven
 
-Real Production signup was attempted after the Public-repository deployment.
-
-Observed:
+Initial Production smoke showed:
 
 ```text
 Create account
@@ -183,39 +166,52 @@ Create account
 → no confirmation email received
 ```
 
-Current signup code calls `supabase.auth.signUp(...)`. The application message means no immediate sign-up API error was surfaced; it does not prove that a confirmation email was accepted by the SMTP provider or delivered.
+The first hypothesis space included SMTP/provider failure, rate limiting, duplicate-user behavior and environment mismatch. No configuration was changed before collecting evidence.
 
-Repository Public/Private visibility does not control Supabase SMTP delivery. The mail path must be diagnosed independently.
+Read-only production evidence then showed:
 
-Previously established production design used hosted Supabase Auth with Resend SMTP. Do not overwrite/reconfigure it speculatively before checking evidence.
+### Users evidence
 
-## 8. Required diagnostic order
+`Authentication → Users` contained only the already-existing account. The attempted smoke test did not create a new learner row.
+
+### Audit-log evidence
+
+Unified Auth audit logs contained:
 
 ```text
-1. Supabase Authentication → Users
-   - verify whether the test signup created a user
-   - inspect email confirmation state
-
-2. Supabase Auth Logs
-   - inspect the exact signup timestamp
-   - identify SMTP, mail-hook, rate-limit or delivery errors
-
-3. Supabase SMTP configuration
-   - confirm custom SMTP remains enabled
-   - verify sender/domain/config state without exposing credentials
-
-4. Resend logs
-   - verify whether Supabase handed a message to Resend
-   - inspect delivered / bounced / rejected / failed status
-
-5. Only after root cause is proven
-   - make the narrowest configuration or code correction
-   - run CI if code changes
-   - deploy if required
-   - repeat real signup → email → confirm → login → Today
+action = user_repeated_signup
 ```
 
-Do not expose SMTP passwords, API keys, service-role keys or other secret values in screenshots, issues or Git commits.
+The actor matched the same already-existing account used for the smoke test.
+
+### Conclusion
+
+The missing-email symptom was caused by **reusing an email address that was already registered**, not by the GitHub Public migration, Vercel, or proven SMTP/Resend failure.
+
+Supabase intentionally does not expose a simple “this account already exists” signal in the normal signup response, so the application-level `signUp()` path can still reach the generic learner-facing confirmation message during a repeated signup attempt.
+
+No SMTP, Resend, Vercel or application-code change is justified from this incident.
+
+## 8. Exact next diagnostic/acceptance step
+
+The next Production Auth smoke must use a **never-before-registered email address**.
+
+Required evidence sequence:
+
+```text
+fresh email
+→ Create account
+→ new Authentication → Users row with current Created at timestamp
+→ confirmation email arrives
+→ open confirmation link
+→ /verify-email shows explicit Email verified success state
+→ sign in
+→ authenticated Today
+```
+
+Only if a truly fresh user is created but the email still fails to arrive should SMTP/Resend delivery diagnostics resume.
+
+Do not delete or repurpose an existing learner account merely to simulate first-time signup unless there is a separate data-retention decision.
 
 ## 9. Remaining 001B acceptance
 
@@ -223,14 +219,15 @@ Do not expose SMTP passwords, API keys, service-role keys or other secret values
 Production HTTPS reachable                 PASS
 Public repository CI                       PASS
 Vercel Production from public main         PASS
-New learner signup request accepted        PASS
-Confirmation email actually delivered      BLOCKED
+Repeated-signup root cause                 PASS / diagnosed
+Fresh new learner signup                   PENDING
+Confirmation email actually delivered      PENDING
 /verify-email explicit success state       PENDING
 Learner sign-in                            PENDING
 Authenticated Today                        PENDING
 ```
 
-P1-PWA-001B must not be marked COMPLETE until all remaining Auth smoke items pass.
+P1-PWA-001B must not be marked COMPLETE until the fresh-account Auth smoke passes end to end.
 
 ## 10. Next slice
 
