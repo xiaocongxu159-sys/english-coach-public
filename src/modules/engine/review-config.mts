@@ -1,4 +1,4 @@
-import reviewConfig from "../../../config/review-v1.config.json";
+import reviewConfig from "../../../config/review-v1.config.json" with { type: "json" };
 import type { ReviewConfig } from "./review-types.mts";
 
 const REVIEW_CONFIG = reviewConfig as ReviewConfig;
