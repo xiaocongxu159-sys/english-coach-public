@@ -14,11 +14,6 @@ export interface StoredDailyPlan {
 export interface DailyPlanStore {
   getDailyPlan(userId: string, planDate: string): Promise<StoredDailyPlan | null>;
   upsertDailyPlan(plan: DailyPlan): Promise<StoredDailyPlan>;
-  completeDailyPlan(
-    userId: string,
-    planId: string,
-    completedAt?: string,
-  ): Promise<StoredDailyPlan>;
 }
 
 function fail(error: { message: string; code?: string } | null, context: string): void {
