@@ -123,6 +123,11 @@
   background: #4058cf;
 }
 
+.primaryButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .secondaryLink {
   display: flex;
   align-items: center;
