@@ -3,7 +3,7 @@
 **Date opened:** 2026-09-11  
 **Parent module:** P1-PWA-001 — hosted/reachable deployment + physical iPhone PWA validation  
 **Slice:** P1-PWA-001C — physical iPhone validation  
-**Status:** IN PROGRESS — Safari install gate passed; standalone/session/touch/interruption checks remain
+**Status:** IN PROGRESS — install + standalone launch passed; installed-app session persistence/interruption checks remain
 
 ## 1. Entry conditions
 
@@ -71,9 +71,10 @@ Any defect found during physical validation must first be reproduced and scoped 
 Safari HTTPS open                         PASS — physical iPhone
 Add to Home Screen                        PASS — physical iPhone
 Home Screen icon present                  PASS — screenshot evidence received
-Standalone launch                         PENDING
-Existing auth/session restored            PENDING
-Today responsive/touch                    PENDING
+Standalone launch                         PASS — Home Screen launch without Safari browser chrome
+Installed-app sign-in                     PASS — login eventually reached authenticated app
+Installed-app session persists on reopen  PENDING
+Today responsive/touch                    PRELIMINARY PASS — authenticated mobile screen reachable
 Lesson responsive/touch                   PENDING
 Review responsive/touch                   PENDING
 Lesson interruption/reopen                PENDING
@@ -94,9 +95,28 @@ English Coach Home Screen icon visible
 installation completed on the physical device
 ```
 
-This verifies the first physical-device installation gate. The screenshot is user-provided acceptance evidence; it is not treated as proof of standalone launch or session persistence until those interactions are performed separately.
+This verifies the first physical-device installation gate.
 
-## 6. Evidence discipline
+## 6. Physical evidence — standalone launch and installed-app login
+
+The learner launched English Coach from the iPhone Home Screen. The app opened without Safari address-bar/browser chrome, verifying standalone launch.
+
+The first installed-app launch presented the login screen rather than inheriting the already-authenticated Safari browsing context. That is not yet treated as a session-persistence failure because the acceptance requirement is persistence **after the installed app itself has authenticated**.
+
+The learner entered credentials and successfully reached the authenticated application. The first login response felt noticeably slow, but it eventually completed without an error screen.
+
+Current interpretation:
+
+```text
+standalone shell                      PASS
+installed-app login functional        PASS
+first interaction latency             OBSERVATION — not yet a proven defect
+session persistence after PWA login   NOT YET TESTED
+```
+
+Do not merge a speculative login-code change solely because of one slow first response. Reproduce timing first; a cold server start, network path, or app/runtime warm-up may explain a one-off delay.
+
+## 7. Evidence discipline
 
 Physical-device checks must be based on actual iPhone behavior. Desktop responsive emulation is not accepted as a substitute.
 
@@ -112,25 +132,28 @@ screenshot when useful
 
 Do not apply speculative fixes from screenshots alone when a reproducible interaction is needed.
 
-## 7. Next manual gate
+## 8. Next manual gate
 
-From the physical iPhone Home Screen:
+Now that the installed app is authenticated:
 
 ```text
-tap the installed English Coach icon
-→ confirm it opens without Safari browser chrome/address bar
-→ confirm whether the existing authenticated session is restored
-→ inspect Today layout/touch usability
+1. leave the app on the authenticated Today screen
+2. swipe up / open App Switcher
+3. fully dismiss English Coach
+4. wait about 10 seconds
+5. tap the English Coach Home Screen icon again
 ```
 
-Required evidence:
+Acceptance result:
 
-- one screenshot of the app after launching from the Home Screen;
-- whether it opened directly to Today or asked for sign-in.
+```text
+PASS → app reopens still authenticated and returns to Today (or equivalent authenticated screen)
+FAIL → app reopens at login and requires credentials again
+```
 
-This next gate can validate standalone launch, session restoration and the first mobile Today rendering in one pass.
+Also note whether reopen feels immediate, moderately delayed, or again noticeably slow. This separates one-time login latency from general installed-app latency.
 
-## 8. Exit condition
+## 9. Exit condition
 
 P1-PWA-001C is COMPLETE only when all required physical-iPhone checks pass or any discovered defects are fixed, redeployed and re-verified on the physical device.
 
