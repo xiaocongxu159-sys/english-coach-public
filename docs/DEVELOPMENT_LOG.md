@@ -137,74 +137,84 @@ The repository/CI/Vercel portion of P1-PWA-001B is therefore verified complete.
 
 Detailed handoff: `docs/P1_PWA_001B_HANDOFF.md`.
 
-### Current blocker — hosted confirmation email delivery
+---
 
-A real production signup reaches the application success state:
+## 2026-09-11 — P1-PWA-001B repeated-signup diagnosis — ROOT CAUSE PROVEN
 
-```text
-Create account
-→ Check your email to confirm your account.
-```
-
-but the confirmation email was not received.
-
-Initial diagnosis intentionally avoided speculative SMTP/configuration changes.
+The first missing-email smoke reused an already-registered address. Supabase unified Auth audit logs recorded `user_repeated_signup`, proving that attempt did not represent a fresh signup. No SMTP, Resend, Vercel or code change was justified from that incident.
 
 ---
 
-## 2026-09-11 — P1-PWA-001B signup diagnosis — ROOT CAUSE PROVEN
+## 2026-09-11 — P1-PWA-001B fresh signup + mail transport — VERIFIED PORTION COMPLETE
 
-The missing-email symptom was traced with read-only production evidence rather than changing SMTP or code.
+A never-before-registered address was then used for a true Production signup.
 
-Evidence:
-
-```text
-Authentication → Users
-→ only the pre-existing account was present; no new learner was created by the smoke attempt
-
-Unified Auth audit logs
-→ action = user_repeated_signup
-→ actor matched the existing account used for the test
-```
-
-Conclusion:
-
-- the test reused an already-registered address;
-- Supabase treated the operation as `user_repeated_signup`;
-- the learner-facing `signUp()` path therefore showed the generic “Check your email” state without proving a new confirmation message had been sent;
-- this incident is **not evidence of a GitHub Public migration regression, Vercel failure, or SMTP/Resend outage**.
-
-No code, Vercel, Supabase SMTP or Resend configuration change is justified from this evidence.
-
-The exact next acceptance test is now:
+Read-only Supabase evidence proved:
 
 ```text
-use a never-before-registered email address
-→ Create account
-→ verify a new Users row with current Created at timestamp
-→ receive confirmation email
-→ click confirmation link
-→ explicit /verify-email success state
-→ sign in
-→ authenticated Today
+auth_users = 2
+learner_profiles = 2
+users_missing_profile = 0
+pilot blueprint = present + active
+Pilot nodes = 2 present + 2 active
+Review schema = present
+fresh user email_confirmed_at = NULL
+fresh user confirmation_sent_at = populated
+fresh user last_sign_in_at = NULL
 ```
 
-Only if a truly fresh account is created but no email arrives should SMTP/Resend delivery diagnostics resume.
+Resend transactional logs independently matched the signup event. The confirmation email was recorded as `delivered`, and its confirmation URL targets the production `english.ctjfyrdian.com/auth/confirm` path. Recipient address, token and message ID are intentionally omitted from project docs.
+
+Conclusion: Supabase confirmation generation, SMTP handoff and Resend/recipient-server acceptance are all verified. The learner did not initially see the message in the mailbox UI, so the remaining mail task is inbox/filtering visibility and then confirmation-click acceptance — not an SMTP transport failure.
 
 ---
 
-## Current handoff — P1-PWA-001B fresh-account Auth smoke
+## 2026-09-11 — Authenticated Today Production error — OPEN
 
-Repository migration, public CI and Vercel Production are verified. The repeated-signup false alarm is diagnosed. The exact next slice is:
+The previously confirmed account can sign in successfully, but the root Today page immediately reaches the application error boundary (`We could not load this step.`).
+
+The sign-in timestamp updates in `auth.users`, proving Auth itself succeeded.
+
+Production database diagnostics also rule out the first data-shape hypotheses:
 
 ```text
-fresh never-registered email
-→ signup
-→ new Supabase user row
-→ confirmation email delivery
+learner profile exists
+users_missing_profile = 0
+Pilot blueprint present + active
+2 Pilot nodes present + active
+Review lifecycle column present
+review_events table present
+old-account daily_plan_count = 0
+old-account review_unit_count = 0
+```
+
+Therefore this is not an old stale Daily Plan being deserialized after the migration. The failure occurs while creating/loading the first authenticated Today snapshot.
+
+Next evidence gate: reproduce once with **Retry**, then capture the matching Vercel Production runtime exception for `/`. Do not mutate production learner data before obtaining that exception.
+
+---
+
+## Current handoff — P1-PWA-001B
+
+Verified:
+
+```text
+public repository + CI
+→ Vercel Production
+→ fresh Supabase user creation
+→ learner profile trigger
+→ confirmation generation
+→ Resend delivery / recipient-server acceptance
+```
+
+Still required:
+
+```text
+find/open fresh confirmation message
 → /verify-email success
-→ login
-→ authenticated Today
+→ fresh-account sign in
+→ diagnose/fix authenticated Today runtime exception
+→ authenticated Today PASS
 → P1-PWA-001C physical iPhone smoke
 → P1-E2E-001 deployed vertical gate
 ```
