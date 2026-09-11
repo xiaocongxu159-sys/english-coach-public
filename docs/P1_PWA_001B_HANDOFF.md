@@ -2,112 +2,38 @@
 
 **Date:** 2026-09-11  
 **Parent module:** P1-PWA-001 — hosted/reachable deployment + physical iPhone PWA validation  
-**Slice:** P1-PWA-001B — hosted environment, public-repository migration and production deployment  
-**Status:** PARTIALLY COMPLETE — repository/CI/Vercel migration verified; fresh signup + confirmation email + explicit verification result PASS; fresh-account sign-in/Today still pending and authenticated Today runtime error remains open  
+**Slice:** P1-PWA-001B — hosted environment, public-repository migration and Production desktop/browser smoke  
+**Status:** COMPLETE / PRODUCTION VERIFIED  
 **Canonical repository:** `xiaocongxu159-sys/english-coach-public`  
-**Production branch:** `main`  
-**Initial clean public snapshot:** `30fb6b5298f14654325ec7f0cefe93e163d451cf`  
-**Production trigger commit:** `d65900bf7873f8d8ac38a1dbb617dd82ffe5fdca`  
-**Documentation sync release:** PR #2 squash-merged as `df252d39a24055195e802e9d7be41e34096155d8`  
-**Merged-main CI:** run `34484320527` — `validate` PASS + `database-integration` PASS
+**Production branch:** `main`
 
-## 1. Repository migration decision
+## 1. Repository migration
 
-The original `xiaocongxu159-sys/english-coach` repository remains private because historical Git metadata contains a personal commit email. Directly changing that repository's visibility to Public would expose old commit/branch/PR history.
+The historical private repository remains private because old Git metadata contains a personal commit email. Directly publicizing it would expose historical metadata, branches and PR history.
 
-Migration used a clean snapshot:
+The project therefore moved to a clean public repository without carrying old `.git` history:
 
 ```text
-old private repository retained
-→ exact old PR #45 source state selected
-→ source exported without .git
-→ sensitive-file and secret-pattern scans
-→ brand-new Git history
+old private repository retained as archive
+→ exact reviewed source snapshot selected
+→ export without .git
+→ secret/sensitive-file scan
+→ new Git history
 → GitHub noreply identity
-→ new public repository
+→ english-coach-public
 ```
 
-The old private repository is archive/history only. New development and Production delivery use `english-coach-public`.
-
-## 2. Exact source state migrated
-
-Old private PR #45 head:
+Initial clean public snapshot:
 
 ```text
-d2736c3ab666959b3bd8831ed6386e13191fcb6e
+30fb6b5298f14654325ec7f0cefe93e163d451cf
 ```
 
-Source tree:
+## 2. Public CI + Vercel Production path
 
-```text
-0a76c785d4854e85361bb354e02cbdb3e06821c8
-```
+The existing Vercel project was preserved, disconnected from the historical private repo, granted access to `english-coach-public`, and reconnected to public `main`.
 
-The clean public root commit pointed to the same source tree, preserving application content while removing old Git history.
-
-PR #45 added the explicit verification result path:
-
-```text
-/auth/confirm
-→ /verify-email?status=success|error
-→ explicit Email verified / Verification failed page
-```
-
-## 3. Public privacy and secret checks
-
-Verified before first public push:
-
-- no tracked `.env`, `.env.local`, `.env.production`, private-key PEM or key file;
-- no detected Supabase secret, Resend API key, GitHub token, AWS key, Google API key, JWT or private key material;
-- `.env.example` contains placeholders only;
-- `.gitignore` excludes `.env*` except `.env.example`, `.vercel`, PEM and local/generated paths;
-- initial public history contained one root commit;
-- commit identity used `users.noreply.github.com`;
-- GitHub account email privacy and private-email push blocking were enabled.
-
-No secret values are recorded here.
-
-## 4. Public CI verification
-
-Initial public CI run `34459279725` passed:
-
-```text
-validate              PASS
-database-integration  PASS
-```
-
-Documentation PR #1 squash-merged as `7642800b54939d203c83ab80352ec3f063f9ba3a`, followed by merged-main run `34482865644`, also double-green.
-
-Canonical-handoff sync PR #2 squash-merged as:
-
-```text
-df252d39a24055195e802e9d7be41e34096155d8
-```
-
-Merged-main CI run `34484320527` also passed:
-
-```text
-validate              PASS
-database-integration  PASS
-```
-
-Therefore the Public repository and current documentation baseline are merged-main verified.
-
-## 5. Vercel Git migration
-
-The existing Vercel project `english-coach` was preserved.
-
-Sequence:
-
-```text
-disconnect old private Git repository
-→ grant Vercel GitHub App access to english-coach-public
-→ connect xiaocongxu159-sys/english-coach-public
-→ keep Production branch main
-→ preserve existing Vercel project environment variables
-```
-
-Environment-variable names present for Production and Preview:
+Production environment-variable names remained in Vercel rather than Git:
 
 ```text
 NEXT_PUBLIC_APP_URL
@@ -116,85 +42,43 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Values remain secret and are not stored in Git documentation.
-
-A no-code-change commit triggered the first deployment after reconnecting Git:
+A no-code commit first verified the new Git→Vercel path:
 
 ```text
 d65900bf7873f8d8ac38a1dbb617dd82ffe5fdca
 chore: trigger Vercel deployment
 ```
 
-Vercel reported Production `Ready`, and GitHub reported Vercel `success`.
-
-Verified path:
+Public GitHub Actions repeatedly passed both permanent gates:
 
 ```text
-english-coach-public/main
-→ GitHub Actions
-→ Vercel Git integration
-→ Production
+validate
+database-integration
 ```
 
-## 6. Auth source-of-truth clarification
+Vercel Production reported Ready/success from the public repository.
 
-Older P1-PWA-001A documentation stated that `signup()` passed `emailRedirectTo` built from `getAppUrl()`.
+## 3. Auth confirmation chain — PASS
 
-That was true at the 001A release commit, but it was later intentionally superseded by old private PR #44:
+The first mail smoke reused an existing account. Supabase Auth audit logs recorded:
 
 ```text
-fix: make Supabase Site URL the confirmation source of truth
+user_repeated_signup
 ```
 
-PR #44 removed `emailRedirectTo` from both signup and resend. Current production confirmation destination therefore depends on hosted Supabase Auth Site URL and the confirmation-email template.
+That was correctly treated as a repeated-signup false alarm rather than an SMTP failure.
 
-The application still owns confirmation verification/result handling:
-
-```text
-/auth/confirm?token_hash=<hash>&type=email
-→ Supabase verifyOtp()
-→ /verify-email?status=success|error
-```
-
-## 7. Repeated-signup false alarm — diagnosed
-
-The first hosted smoke reused an already-registered account. Unified Auth audit logs recorded:
+A never-before-registered address then created a real Production learner. Read-only Production evidence showed:
 
 ```text
-action = user_repeated_signup
-```
-
-That explained why the page showed the generic confirmation message without creating a new learner. No SMTP/Vercel/code change was justified from that attempt.
-
-## 8. Fresh-account signup + confirmation — PASS
-
-A second smoke used a never-before-registered address.
-
-Read-only production evidence showed:
-
-```text
-auth_users = 2
-learner_profiles = 2
+auth user created
+learner profile created
 users_missing_profile = 0
-pilot_blueprint_rows = 1
-pilot_blueprint_active = 1
-pilot_node_rows = 2
-pilot_nodes_active = 2
-review_units_lifecycle_column = 1
-review_events_table = 1
+confirmation_sent_at populated
+email_confirmed_at initially null
 ```
 
-For the fresh account at the pre-confirmation checkpoint:
-
-- `created_at` was current;
-- `email_confirmed_at` was null;
-- `confirmation_sent_at` was populated at signup time;
-- `last_sign_in_at` was null;
-- `daily_plan_count = 0`.
-
-Resend delivery logs independently matched the signup event within about one second. The transactional email status was `delivered`, with the expected subject and sender identity, and the confirmation link targeted the production `english.ctjfyrdian.com/auth/confirm` path. Token values and recipient addresses are intentionally omitted from this public document.
-
-The learner then located the message in Gmail **Spam**, opened it, clicked the confirmation link, and reached the deployed explicit result screen:
+Resend independently showed the confirmation transaction as `delivered`. Gmail received the message but classified it as Spam. The learner opened the message, clicked the confirmation link and reached the deployed explicit success screen:
 
 ```text
 Email verified
@@ -202,118 +86,153 @@ Your email address has been confirmed successfully.
 Your account is ready. Sign in to continue learning.
 ```
 
-### Conclusion
-
-The following hosted chain is now verified end to end:
+Verified chain:
 
 ```text
 fresh signup
-→ auth user created
-→ learner profile created
-→ confirmation generated
-→ Supabase SMTP handoff
-→ Resend delivered
-→ Gmail received (classified as Spam)
-→ production /auth/confirm
+→ Auth user
+→ learner profile trigger
+→ Supabase confirmation generation
+→ SMTP / Resend delivery
+→ Gmail receipt
+→ /auth/confirm
 → verifyOtp()
-→ explicit /verify-email success screen
+→ /verify-email success
 ```
 
-The email-transport/callback portion of P1-PWA-001B is therefore **PASS**. Gmail spam classification is a deliverability/reputation concern, not a transport failure. Marking the message as “Not spam” is appropriate for this test mailbox; no SMTP reconfiguration is justified by this event.
+Gmail Spam placement is a deliverability/reputation observation, not an SMTP transport failure.
 
-## 9. Authenticated Today blocker — separate issue
+## 4. Production Today runtime failure — RESOLVED
 
-The pre-existing confirmed account can sign in successfully. After sign-in, loading `/` reaches the root error boundary and displays:
+Both the historical confirmed account and the fresh confirmed account could sign in, but `/` initially reached the root error boundary.
+
+Vercel captured:
 
 ```text
-Connection problem
-We could not load this step.
+GET / → 500
+TypeError: The "path" argument must be of type string or an instance of Buffer or URL
 ```
 
-This proves Auth login succeeds; the failure occurs while loading the authenticated Today snapshot.
+Supabase request logs showed the Today database-read chain succeeding with HTTP 200, which localized the failure after data loading and before returning the Today snapshot.
 
-Read-only production diagnostics rule out several earlier hypotheses:
+Root cause: immutable scheduler/review JSON configuration was being loaded with runtime `import.meta.url` + `readFileSync()`, which is not a safe assumption for the bundled Vercel server runtime.
 
-- learner profile exists;
-- `users_missing_profile = 0`;
-- exact Pilot blueprint exists and is active;
-- both Pilot nodes exist and are active;
-- current Review schema exists;
-- the old account has `daily_plan_count = 0`, so the failure is **not** caused by loading a stale historical Daily Plan;
-- the account has no existing Review Units in the observed result.
+Fix: convert the scheduler and review configuration loaders to static JSON imports so Next/Vercel bundles them into the server module graph.
 
-The next high-value discriminator is the newly confirmed fresh account:
+After CI, merge and Production deploy, authenticated Today loaded successfully for the fresh learner with the expected reviewed Phase 1 plan:
 
 ```text
-fresh account sign in
-→ if Today also fails: system-wide hosted Today/runtime problem
-→ if Today succeeds: old-account-specific state problem
+35 min profile budget
+14 min reviewed work
+2 new nodes
+0 reviews ready now
+0 reviews upcoming
 ```
 
-If Today fails, capture the corresponding Vercel Production runtime exception before changing code or production data.
+ISSUE-032 is therefore resolved.
 
-## 10. Remaining 001B acceptance
+Detailed runtime handoff: `docs/P1_PWA_001B_TODAY_RUNTIME_FIX_HANDOFF.md`.
+
+## 5. Production Lesson runtime failure — RESOLVED
+
+After Today was fixed, the learner successfully started the reviewed Lesson, then a later Lesson server-action POST failed with the same Node path-error class:
+
+```text
+POST /lesson/<lesson-instance-id> → 500
+TypeError: The "path" argument must be of type string or an instance of Buffer or URL
+```
+
+The failing path was deterministic exercise submission → `submitExerciseAttempt()` → `getMasteryConfig()`.
+
+`mastery-v1.config.json` was still being loaded through runtime filesystem resolution. It was converted to the same static JSON import pattern.
+
+PR #6 passed:
+
+```text
+validate                  PASS
+database-integration      PASS
+Vercel Preview            PASS
+```
+
+and squash-merged as:
+
+```text
+557acfb43944490f991fb1f723299cce70e4e8d8
+```
+
+Merged-main verification also passed both GitHub Actions jobs and Vercel Production.
+
+Most importantly, the learner resumed the existing Production Lesson and completed the entire reviewed flow:
+
+```text
+8/8 stages
+Lesson complete
+Exit check: 9/10 · more practice needed
+```
+
+No account reset, Lesson reset or Production data rewrite was required. This verifies that persisted Lesson state survived the interruption and that the previously failing submission path now progresses through completion.
+
+ISSUE-033 is therefore resolved.
+
+Detailed runtime handoff: `docs/P1_PWA_001B_LESSON_RUNTIME_FIX_HANDOFF.md`.
+
+## 6. P1-PWA-001B acceptance matrix
 
 ```text
 Production HTTPS reachable                 PASS
-Public repository CI                       PASS
+Public repository canonical                PASS
+Public GitHub Actions                      PASS
 Vercel Production from public main         PASS
-Repeated-signup false alarm                PASS / diagnosed
-Fresh new learner signup                   PASS
-New learner profile trigger                PASS
-Confirmation message generated             PASS
-Supabase → Resend handoff                   PASS
-Recipient mail-server acceptance           PASS
-Gmail message located                      PASS — Spam classification observed
-/auth/confirm callback                      PASS
-/verify-email explicit success state       PASS
-Fresh-account sign-in                       PENDING
-Authenticated Today                        BLOCKED/PENDING — runtime issue under diagnosis
+Fresh learner signup                       PASS
+Learner profile trigger                    PASS
+Confirmation generated                     PASS
+Resend delivery                            PASS
+Gmail receipt                              PASS — Spam classification observed
+/auth/confirm callback                     PASS
+/verify-email explicit success             PASS
+Fresh-account sign-in                      PASS
+Authenticated Today                        PASS
+Start reviewed Lesson                      PASS
+Resume after runtime interruption          PASS
+Deterministic exercise submission          PASS
+Lesson stage progression                   PASS
+Exit check                                 PASS — 9/10
+Lesson completion                          PASS — 8/8 stages
 ```
 
-P1-PWA-001B must not be marked COMPLETE until the fresh-account sign-in and authenticated Today smoke pass.
+Therefore **P1-PWA-001B is COMPLETE / PRODUCTION VERIFIED**.
 
-## 11. Exact next diagnostics
+## 7. What remains outside 001B
 
-1. On the `Email verified` page choose **Continue to sign in**.
-2. Sign in with the newly confirmed fresh account.
-3. Observe whether authenticated Today loads.
-4. If Today succeeds, record that result and then investigate why only the historical account failed.
-5. If Today reaches the same root error boundary, click **Retry** once and capture the matching Vercel Production runtime exception for `/`.
+P1-PWA-001B proves the hosted desktop/browser path and the real Production Auth→Today→Lesson chain.
 
-Only after the runtime exception is known should a code or data fix be proposed.
+The next slice is **P1-PWA-001C physical iPhone validation**:
 
-## 12. Next slice
-
-After 001B hosted desktop smoke passes, proceed to **P1-PWA-001C physical iPhone validation**:
-
-- open final HTTPS origin;
+- open final HTTPS origin on the physical iPhone;
 - Add to Home Screen;
 - launch standalone;
 - verify auth/session persistence;
 - verify Today/Lesson/Review responsive/touch behavior;
 - interrupt/reopen Lesson and Review;
-- test network interruption then Retry;
+- test a real network interruption followed by Retry;
 - confirm authoritative persisted state resumes correctly.
 
-Then execute deployed **P1-E2E-001** before Phase 2.
+After 001C, execute deployed **P1-E2E-001** before Phase 2.
 
-## 13. Documentation discipline — mandatory
+## 8. Documentation discipline
 
-A slice is not formally complete until documentation and verification agree.
+A slice is only complete when implementation, verification and documentation agree.
 
-For every slice:
+For each future slice:
 
 ```text
 implementation/configuration
 → verification evidence
 → update module HANDOFF
 → update DEVELOPMENT_LOG
-→ update ISSUES_AND_SOLUTIONS if an issue/root cause/solution exists
+→ update ISSUES_AND_SOLUTIONS when a root cause/fix exists
 → PR CI
 → merge
 → merged-main CI
 → mark COMPLETE
 ```
-
-If blocked, record the completed portion, blocker, evidence and exact next diagnostic step in the same work cycle.
