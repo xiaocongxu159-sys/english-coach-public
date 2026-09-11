@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { login } from "./actions";
 import styles from "./login.module.css";
+import { LoginSubmitButton } from "./submit-button";
 
 type LoginPageProps = {
   searchParams: Promise<{ error?: string; message?: string }>;
@@ -27,7 +28,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         ) : null}
         {params.message ? <p className={styles.message}>{params.message}</p> : null}
 
-        <form className={styles.form}>
+        <form className={styles.form} action={login}>
           <label className={styles.field}>
             Email
             <input name="email" type="email" autoComplete="email" required />
@@ -42,9 +43,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               required
             />
           </label>
-          <button type="submit" className={styles.primaryButton} formAction={login}>
-            Sign in
-          </button>
+          <LoginSubmitButton />
         </form>
 
         <div className={styles.divider}>New to English Coach?</div>
