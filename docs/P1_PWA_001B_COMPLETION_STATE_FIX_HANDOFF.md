@@ -3,7 +3,7 @@
 **Date:** 2026-09-11  
 **Parent slice:** P1-PWA-001B  
 **Issue:** ISSUE-034 — completed Lesson still appears as `In progress` / `Resume lesson` on Today  
-**Status:** FIX IN REVIEW — implementation and regression coverage added; CI/Production verification pending
+**Status:** CLOSED — Production verified 2026-09-11
 
 ## 1. Production evidence
 
@@ -15,7 +15,7 @@ Lesson complete
 Exit check: 9/10 · more practice needed
 ```
 
-After choosing **Back to Today**, the same learner saw:
+Before the fix, after choosing **Back to Today**, the same learner saw:
 
 ```text
 Plan status: In Progress
@@ -26,9 +26,26 @@ CTA: Resume lesson
 
 The Lesson-complete screen and Today plan status therefore disagreed.
 
+After the fix was deployed and the existing Production learner refreshed Today, the stale state repaired successfully and the page visibly showed:
+
+```text
+Plan status: Completed
+CTA: View lesson summary
+0 reviews ready now
+14 reviews upcoming
+```
+
+The Production screenshot also confirmed the completed-copy boundary:
+
+```text
+14 minutes of reviewed work completed. Future review stays scheduled separately.
+```
+
+This verifies that the original learner data was repaired without resetting the learner or deleting future Review work.
+
 ## 2. Root cause
 
-The mismatch has two separate causes.
+The mismatch had two separate causes.
 
 ### Persistence gap
 
@@ -74,20 +91,20 @@ A replay returns the already-completed row instead of duplicating or reopening w
 
 ### Lesson completion
 
-`completeLessonSummary()` now reconciles the referenced P1 Daily Plan after the Lesson reaches `completed`.
+`completeLessonSummary()` reconciles the referenced P1 Daily Plan after the Lesson reaches `completed`.
 
 It also runs that reconciliation when the Lesson is already completed, so a retry can repair state safely.
 
 ### Today repair path
 
-`getOrCreateTodaySnapshot()` now detects the exact stale Production state:
+`getOrCreateTodaySnapshot()` detects the exact stale Production state:
 
 ```text
 P1 Daily Plan = in_progress
 sole resolved Lesson = completed
 ```
 
-and repairs the plan to `completed` before rendering Today. This is required for learners whose Lesson completed before this fix was deployed.
+and repairs the plan to `completed` before rendering Today. This covers learners whose Lesson completed before this fix was deployed.
 
 ### Today UI
 
@@ -109,7 +126,7 @@ This fix therefore does not zero or delete future Review Units. It only prevents
 
 ## 6. Regression coverage
 
-`test/lesson-exit-ui-db.integration.mts` now verifies:
+`test/lesson-exit-ui-db.integration.mts` verifies:
 
 1. a completed P1 Lesson also closes its Daily Plan;
 2. replaying Lesson completion is idempotent;
@@ -122,24 +139,31 @@ This fix therefore does not zero or delete future Review Units. It only prevents
 Before merge:
 
 ```text
-PR validate                     PENDING
-PR database-integration         PENDING
-Vercel Preview                  PENDING
+PR validate                      PASS
+PR database-integration          PASS
+Vercel Preview                   PASS
 ```
 
 After merge:
 
 ```text
-merged-main validate            PENDING
-merged-main database-integration PENDING
-Vercel Production               PENDING
-real Production stale-plan repair PENDING
-Today badge = Completed         PENDING
-Today CTA = View lesson summary PENDING
+merged-main validate             PASS
+merged-main database-integration PASS
+Vercel Production                PASS
+real Production stale-plan repair PASS
+Today badge = Completed          PASS
+Today CTA = View lesson summary  PASS
+future Review preserved          PASS (14 upcoming remained visible)
 ```
 
-The issue is not closed until the existing real Production learner refreshes Today and the stale state is visibly repaired.
+## 8. Final result
 
-## 8. Next step after verification
+**ISSUE-034 = CLOSED.**
 
-Once ISSUE-034 is Production verified, continue to **P1-PWA-001C physical iPhone validation**. Broad UI/UX polish remains after the mobile functional acceptance gate.
+The Production UI, persisted Daily Plan state and completed Lesson state now agree for the frozen single-request Phase 1 Pilot. Existing stale learner data self-repairs on Today load, completion is idempotent, and future Review scheduling remains independent.
+
+No migration, learner reset, Mastery threshold change or Review deletion was required.
+
+## 9. Next step
+
+Proceed to **P1-PWA-001C physical iPhone validation**. Broad UI/UX polish remains after the mobile functional acceptance gate.
