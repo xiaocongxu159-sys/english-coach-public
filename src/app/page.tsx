@@ -6,11 +6,19 @@ import { logout } from "./login/actions";
 
 export const dynamic = "force-dynamic";
 
-function statusLabel(status: "planned" | "in_progress" | "completed" | "superseded") {
+type PlanStatus = "planned" | "in_progress" | "completed" | "superseded";
+
+function statusLabel(status: PlanStatus) {
   if (status === "in_progress") return "In progress";
   if (status === "completed") return "Completed";
   if (status === "superseded") return "Updated";
   return "Ready";
+}
+
+function lessonActionLabel(status: PlanStatus) {
+  if (status === "planned") return "Start lesson";
+  if (status === "completed") return "View lesson summary";
+  return "Resume lesson";
 }
 
 export default async function Home() {
@@ -22,7 +30,6 @@ export default async function Home() {
   const plan = storedPlan.plan;
   const lessonRequest = plan.lesson_requests[0];
   const selectedNewCount = plan.selected.new_node_ids.length;
-  const lessonActionLabel = storedPlan.status === "planned" ? "Start lesson" : "Resume lesson";
 
   return (
     <main className="todayShell">
@@ -61,7 +68,9 @@ export default async function Home() {
         </h2>
         <p className="todayHeroCopy">
           {lessonRequest
-            ? `${lessonRequest.minutes} minutes of bounded reviewed work, selected from your current learning state.`
+            ? storedPlan.status === "completed"
+              ? `${lessonRequest.minutes} minutes of reviewed work completed. Future review stays scheduled separately.`
+              : `${lessonRequest.minutes} minutes of bounded reviewed work, selected from your current learning state.`
             : "There is no reviewed lesson request ready right now."}
         </p>
 
@@ -83,7 +92,7 @@ export default async function Home() {
         {lessonRequest ? (
           <form action={startTodayLesson}>
             <button type="submit" className="quietButton">
-              {lessonActionLabel}
+              {lessonActionLabel(storedPlan.status)}
             </button>
           </form>
         ) : null}
