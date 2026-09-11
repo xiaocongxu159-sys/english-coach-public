@@ -1,4 +1,4 @@
-import dailySchedulerConfig from "../../../config/daily-scheduler-v1.config.json";
+import dailySchedulerConfig from "../../../config/daily-scheduler-v1.config.json" with { type: "json" };
 import type {
   DailyPlan,
   DailySchedulerConfig,
