@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs";
+import masteryConfig from "../../../config/mastery-v1.config.json" with { type: "json" };
 import type { MasteryConfig } from "./types.mts";
 
-let cachedMasteryConfig: MasteryConfig | null = null;
+const MASTERY_CONFIG = masteryConfig as MasteryConfig;
 
 export function getMasteryConfig(): MasteryConfig {
-  if (cachedMasteryConfig) return cachedMasteryConfig;
-  const path = new URL("../../../config/mastery-v1.config.json", import.meta.url);
-  cachedMasteryConfig = JSON.parse(readFileSync(path, "utf8")) as MasteryConfig;
-  return cachedMasteryConfig;
+  return MASTERY_CONFIG;
 }
