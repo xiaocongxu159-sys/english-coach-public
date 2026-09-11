@@ -37,7 +37,8 @@ This is the active project issue ledger. Full pre-P1-UI historical issue prose i
 | ISSUE-029 | PowerShell instructions were accidentally executed in Ubuntu Bash | Resolved; accidental `/home/ubuntu/.git` removed before any push |
 | ISSUE-030 | First migration secret scan produced broad false positives | Resolved with boundary-aware precise scanner |
 | ISSUE-031 | Production signup appeared to succeed but no confirmation email arrived | Resolved — repeated-signup false alarm separated; fresh signup/delivery/callback verified, Gmail Spam placement observed |
-| ISSUE-032 | Confirmed user can sign in but authenticated Today route reaches root error boundary | Open — runtime exception not yet captured |
+| ISSUE-032 | Authenticated Today route reached root error boundary in Production | Resolved / Production verified — static scheduler/review config imports |
+| ISSUE-033 | Lesson exercise submission reached root error boundary in Production | Resolved / Production verified — static Mastery config import |
 
 Detailed Engine/UI/PWA context remains in:
 
@@ -46,6 +47,8 @@ Detailed Engine/UI/PWA context remains in:
 - `docs/P1_UI_001C_HANDOFF.md`
 - `docs/P1_PWA_001_HANDOFF.md`
 - `docs/P1_PWA_001B_HANDOFF.md`
+- `docs/P1_PWA_001B_TODAY_RUNTIME_FIX_HANDOFF.md`
+- `docs/P1_PWA_001B_LESSON_RUNTIME_FIX_HANDOFF.md`
 
 ---
 
@@ -64,14 +67,6 @@ NEXT_PUBLIC_APP_URL ?? http://localhost:3000
 ```
 
 That fallback is convenient in local development but unsafe as a production default. If the production environment omitted `NEXT_PUBLIC_APP_URL`, account confirmation email generation could succeed while pointing the learner back to localhost.
-
-### Impact
-
-A deployed signup flow could appear healthy until the user opened the confirmation email, then fail outside the developer machine. This would create an environment-dependent Auth failure that normal application compilation could not detect.
-
-### Root cause
-
-Development convenience and production deployment requirements shared the same fallback behavior. Supabase URL/key configuration already failed fast when missing, but application-origin configuration did not.
 
 ### Final solution
 
@@ -104,17 +99,6 @@ The repository had a Web App Manifest and Apple web-app metadata but no Service 
 
 At the same time, the existing manifest exposed its only icon as `purpose: "maskable"`, a weaker compatibility choice for older iOS manifest-icon handling than an icon whose purpose includes `any`.
 
-### Impact
-
-Two opposite mistakes were possible:
-
-1. add an unplanned Service Worker/cache layer and create new stale-state/offline complexity simply to satisfy a generic checklist;
-2. leave a real iPhone Home Screen icon compatibility risk because the app already “had a manifest.”
-
-### Root cause
-
-“PWA” is an umbrella term, while the project already froze an explicit Phase 1 physical-device acceptance contract. That contract requires Add to Home Screen, responsive flow, session persistence, interruption/resume and network error/retry; it does not require offline learning content.
-
 ### Final solution
 
 Use the project contract rather than an external generic checklist:
@@ -128,13 +112,9 @@ Use the project contract rather than an external generic checklist:
 - add learner-facing Retry for route/network failure;
 - enforce 44px minimum height for common button/input/select controls.
 
-### Verification
-
-`test/pwa-manifest.test.mts` locks the manifest contract. Feature code CI #236, final PR CI #242 and merged-main CI #243 passed application and fresh-Supabase double-green, proving the PWA shell hardening did not alter Engine/UI persistence semantics.
-
 ### Remaining limitation
 
-Only a real hosted HTTPS deployment on the user's physical iPhone can verify Add to Home Screen, standalone launch, session persistence, interruption/resume and actual network-retry behavior. That remains P1-PWA-001B/C.
+Only a real hosted HTTPS deployment on the user's physical iPhone can verify Add to Home Screen, standalone launch, session persistence, interruption/resume and actual network-retry behavior. That remains P1-PWA-001C.
 
 ---
 
@@ -146,17 +126,13 @@ Only a real hosted HTTPS deployment on the user's physical iPhone can verify Add
 
 ### Problem
 
-The historical private repository contained old Git commit metadata with a personal author email. Changing that repository's visibility directly to Public would expose its existing commit/branch/PR history, even though the current source tree itself did not contain an obvious live secret.
+The historical private repository contained old Git commit metadata with a personal author email. Changing that repository's visibility directly to Public would expose its existing commit/branch/PR history.
 
 ### Solution
 
-A new public repository, `xiaocongxu159-sys/english-coach-public`, was created. PR #45 source was exported without `.git`, scanned, then committed as a brand-new root commit using GitHub noreply identity.
+A new public repository, `xiaocongxu159-sys/english-coach-public`, was created. The selected reviewed source was exported without `.git`, scanned, then committed as a brand-new root commit using GitHub noreply identity.
 
-### Verification
-
-The initial public root commit is `30fb6b5298f14654325ec7f0cefe93e163d451cf`; its source tree matches the selected PR #45 source tree while parents are empty. Public GitHub Actions passed both permanent jobs.
-
-The old private repository remains private as historical/archive context.
+The old private repository remains private as archive/history.
 
 ---
 
@@ -168,19 +144,15 @@ The old private repository remains private as historical/archive context.
 
 ### Problem
 
-An initial migration command block was written for PowerShell, but the active terminal was Ubuntu Bash. PowerShell-only commands such as `Set-Location` and `Remove-Item` were not recognized. Bash then initialized an accidental Git repository at `/home/ubuntu/.git` before the mistake was stopped.
-
-### Risk
-
-Running `git add .` from `/home/ubuntu` could have staged unrelated server files if allowed to continue. This was a local-only risk at that point; no public push occurred.
+PowerShell-only commands were initially pasted into Ubuntu Bash, creating an accidental local `/home/ubuntu/.git` before the procedure was stopped.
 
 ### Resolution
 
-The terminal was stopped, `/home/ubuntu/.git` was explicitly removed, and the public repository was independently verified to remain empty. The migration was restarted with Ubuntu-only commands in isolated `/tmp/english-coach-*` directories.
+The accidental Git directory was removed before any public push. The migration restarted in isolated `/tmp/english-coach-*` directories using Ubuntu/Bash commands only.
 
 ### Prevention
 
-For this project, server-side operational instructions must state and use the exact shell environment. Do not mix PowerShell and Bash syntax in the same operational path.
+Operational instructions must state and use the exact shell environment. Do not mix PowerShell and Bash syntax.
 
 ---
 
@@ -192,13 +164,11 @@ For this project, server-side operational instructions must state and use the ex
 
 ### Problem
 
-The first grep-based secret scanner matched ordinary project strings containing sequences such as `re_`, producing false positives in configuration names and learning-content fields.
+The first grep-based secret scanner matched ordinary project strings and produced false positives.
 
 ### Resolution
 
-The push was correctly blocked before any publication. The scanner was replaced with a boundary-aware Python pattern check for concrete credential formats including private keys, Supabase secret keys, Resend API keys, GitHub tokens, AWS access keys, Google API keys and JWT-shaped values.
-
-The precise scan returned `PRECISE_SECRET_SCAN_OK` before the clean root commit was pushed.
+The push was blocked before publication. The scanner was replaced with boundary-aware checks for concrete credential formats. The precise scan passed before the clean root commit was pushed.
 
 ---
 
@@ -208,52 +178,30 @@ The precise scan returned `PRECISE_SECRET_SCAN_OK` before the clean root commit 
 **Module:** P1-PWA-001B / hosted Supabase Auth signup smoke  
 **Status:** Resolved
 
-### First observed behavior
-
-The Production signup form returned:
-
-```text
-Check your email to confirm your account.
-```
-
-but no confirmation email was visible.
-
 ### First root cause
 
-The initial smoke reused an already-registered email. Unified Supabase Auth audit logs showed:
+The initial smoke reused an already-registered email. Supabase Auth audit logs showed:
 
 ```text
-action = user_repeated_signup
+user_repeated_signup
 ```
 
-That attempt did not create a new user and therefore was not a valid first-signup delivery test.
+That was not a valid fresh-signup mail-delivery test.
 
 ### Fresh-account evidence
 
-A never-before-registered address was then used.
+A never-before-registered address then created a second Auth user and learner profile. `confirmation_sent_at` populated, Resend showed `delivered`, and the confirmation link targeted the production callback.
 
-Production SQL showed:
+### Final verification
 
-- second Auth user created;
-- second learner profile created automatically;
-- `users_missing_profile = 0`;
-- fresh user's `confirmation_sent_at` populated;
-- fresh user's `email_confirmed_at` was null at the pre-confirmation checkpoint;
-- fresh user's `last_sign_in_at` was null at that checkpoint.
-
-Resend logs independently showed a matching confirmation transaction with status `delivered`. The confirmation URL targeted the production `/auth/confirm` route. Recipient address, message ID and token are omitted from this public document.
-
-### Final resolution / verification
-
-The learner located the message in Gmail **Spam**, opened it, clicked **Confirm email address**, and reached the deployed explicit success screen:
+The learner found the confirmation message in Gmail Spam, opened it, clicked **Confirm email address**, and reached:
 
 ```text
 Email verified
 Your email address has been confirmed successfully.
-Your account is ready. Sign in to continue learning.
 ```
 
-Therefore the hosted confirmation chain is verified:
+The hosted chain is verified:
 
 ```text
 fresh signup
@@ -266,88 +214,117 @@ fresh signup
 → /verify-email success
 ```
 
-The original “missing mail” symptom had two distinct causes across the two tests:
-
-1. the first attempt was not a fresh signup at all (`user_repeated_signup`);
-2. the true fresh confirmation message was received but Gmail classified it as Spam.
-
-Neither result supports changing SMTP configuration. Gmail spam placement is a deliverability/reputation observation; marking the test message as “Not spam” is appropriate for the mailbox used in acceptance testing.
-
-### Prevention
-
-Production Auth smoke must distinguish fresh signup from existing-account behavior, and delivery diagnosis must separate:
-
-```text
-message generated
-→ provider accepted
-→ recipient server accepted
-→ mailbox folder/classification
-→ confirmation callback result
-```
-
-Do not label the SMTP path broken until the provider/recipient-server stage actually fails.
+Gmail Spam placement is a deliverability/reputation observation, not an SMTP transport failure.
 
 ---
 
-## ISSUE-032 — Confirmed user signs in but Today route reaches root error boundary
+## ISSUE-032 — Authenticated Today route reached root error boundary in Production
 
-**Date opened:** 2026-09-11  
+**Date closed:** 2026-09-11  
 **Module:** P1-PWA-001B / hosted authenticated Today smoke  
-**Status:** Open — runtime exception not yet captured
+**Status:** Resolved / Production verified
 
 ### Observed behavior
 
-A previously confirmed account can authenticate successfully. Immediately after sign-in, `/` renders the root error boundary:
+Both an existing confirmed learner and a newly confirmed learner could authenticate, but `/` reached the root error boundary.
+
+Vercel captured:
 
 ```text
-Connection problem
-We could not load this step.
+GET / → 500
+TypeError: The "path" argument must be of type string or an instance of Buffer or URL
 ```
 
-The user's `last_sign_in_at` updates, proving the failure is after Auth sign-in.
+Supabase request logs showed the Today read chain succeeding with HTTP 200, ruling out the primary database/auth hypotheses.
 
-### Evidence collected
+### Root cause
 
-Read-only production checks prove:
+`daily-scheduler-v1.config.json` and `review-v1.config.json` were loaded with runtime `import.meta.url` + `readFileSync()` logic that worked in local/CI Node but was unsafe inside the bundled Vercel server runtime.
 
-- Auth user exists and is confirmed;
-- learner profile exists;
-- no user is missing a learner profile;
-- Phase 1 Pilot blueprint exists and is active;
-- both exact Pilot nodes exist and are active;
-- upgraded Review schema exists;
-- old account `daily_plan_count = 0`;
-- old account `review_unit_count = 0` in the observed result.
+### Solution
 
-### Ruled-out hypothesis
+Convert both immutable JSON configuration loaders to static JSON imports so they are included in the server bundle.
 
-The failure is **not** caused by deserializing a stale pre-migration Daily Plan, because no Daily Plan exists for the affected account.
+### Production verification
 
-### Next evidence gate
-
-Use the newly confirmed fresh account as the next discriminator:
+After CI, merge and deployment, the fresh learner loaded Today successfully and saw the expected reviewed Phase 1 plan:
 
 ```text
-fresh account Today succeeds
-→ investigate old-account-specific state
-
-fresh account Today also fails
-→ hosted Today/runtime problem is system-wide
+35 min profile budget
+14 minutes reviewed work
+2 new nodes
+0 reviews ready now
+0 reviews upcoming
 ```
 
-If the fresh account also fails, reproduce once with **Retry**, then inspect Vercel Production runtime logs for the matching `/` request and capture the actual server exception/stack. Do not mutate production rows before that evidence exists.
+The learner then started the Lesson successfully. ISSUE-032 is resolved.
 
-Only after the runtime exception is known should a code or data change be proposed.
+---
+
+## ISSUE-033 — Lesson exercise submission reached root error boundary in Production
+
+**Date closed:** 2026-09-11  
+**Module:** P1-PWA-001B / hosted Lesson progression  
+**Status:** Resolved / Production verified
+
+### Observed behavior
+
+After Today loaded and the reviewed Lesson started, a later Lesson server-action POST failed:
+
+```text
+POST /lesson/<lesson-instance-id> → 500
+TypeError: The "path" argument must be of type string or an instance of Buffer or URL
+```
+
+The learner-facing error boundary showed Reference `246545820`.
+
+### Root cause
+
+Deterministic exercise submission reaches `submitExerciseAttempt()`, which loads Mastery configuration through `getMasteryConfig()`.
+
+`mastery-v1.config.json` still used the same runtime `import.meta.url` + `readFileSync()` pattern.
+
+### Solution
+
+Replace the remaining runtime filesystem Mastery loader with a static JSON import. No Mastery thresholds, scoring rules, Review semantics, learner rows or Lesson checkpoints changed.
+
+### Verification
+
+PR #6 passed:
+
+```text
+validate                  PASS
+database-integration      PASS
+Vercel Preview            PASS
+```
+
+and squash-merged to main as:
+
+```text
+557acfb43944490f991fb1f723299cce70e4e8d8
+```
+
+Merged-main `validate`, `database-integration` and Vercel Production passed.
+
+The learner then resumed the same Production Lesson and completed it:
+
+```text
+8/8 stages
+Lesson complete
+Exit check: 9/10 · more practice needed
+```
+
+No account reset, Lesson reset or Production data rewrite was required. This confirms the prior Lesson POST runtime failure is resolved and persisted Lesson state survives interruption/redeployment.
 
 ---
 
 ## Current open / accepted deployment limitations
 
 - P1-PWA-001A is COMPLETE / merged-main verified;
-- P1-PWA-001B repository migration, public CI and Vercel production path are verified;
-- ISSUE-031 signup/confirmation chain is resolved and verified through the explicit `Email verified` screen;
-- Gmail classified the fresh confirmation message as Spam; this is a deliverability/reputation observation, not a transport failure;
-- ISSUE-032 authenticated Today runtime error is open;
-- fresh-account sign-in/Today smoke is the immediate next discriminator;
-- physical iPhone Home Screen/install/session/interruption/network-retry tests are pending;
+- P1-PWA-001B hosted desktop/browser Production smoke is COMPLETE / Production verified;
+- ISSUE-031 Auth confirmation is resolved;
+- ISSUE-032 Today runtime failure is resolved;
+- ISSUE-033 Lesson/Mastery runtime failure is resolved;
+- Gmail Spam placement remains a deliverability/reputation observation;
+- P1-PWA-001C physical iPhone Home Screen/install/session/interruption/network-retry validation is pending;
 - full deployed P1-E2E-001 remains pending.
